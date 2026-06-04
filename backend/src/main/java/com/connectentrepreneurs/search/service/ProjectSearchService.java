@@ -21,29 +21,18 @@ public class ProjectSearchService {
                 projectRepository.findAll();
 
         return projects.stream()
-
-        	    .filter(project ->
-
-        	        (secteur == null || secteur.isEmpty())
-
-        	        ||
-
-        	        project.getSecteur()
-        	               .toLowerCase()
-        	               .contains(
-        	                   secteur.toLowerCase()
-        	               )
-
-        	        ||
-
-        	        project.getBesoin()
-        	               .toLowerCase()
-        	               .contains(
-        	                   secteur.toLowerCase()
-        	               )
-
-        	    )
-
-        	    .toList();
+                .filter(project ->
+                        (secteur == null || secteur.isEmpty()
+                            || project.getSecteur()
+                                      .toLowerCase()
+                                      .contains(secteur.toLowerCase()))
+                )
+                .filter(project ->
+                        (besoin == null || besoin.isEmpty()
+                            || project.getBesoin()
+                                      .toLowerCase()
+                                      .contains(besoin.toLowerCase()))
+                )
+                .toList();
     }
 }

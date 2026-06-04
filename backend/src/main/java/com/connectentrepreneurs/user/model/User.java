@@ -1,46 +1,65 @@
 package com.connectentrepreneurs.user.model;
 
-import java.util.List;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
+import java.time.LocalDateTime;
+import java.util.List;
 
 @Document(collection = "users")
-
 public class User {
-	
-	@Id
-
+    @Id
     private String id;
-    private String name;
-    private String sector;
-    private List<String> skills;
-    private String need;
-    private String location;
-    private String role;
+    private String nom;
+    private String email;
+    private String secteur;
+    private List<String> competences;
+    private String besoin;
+    private String photoUrl;
+    private String role = "USER";
+    private String firebaseUid;
+    private boolean actif = true;
+    private LocalDateTime createdAt = LocalDateTime.now();
+    private Location localisation;
 
-    public User() {}
+    public static class Location {
+        private double latitude;
+        private double longitude;
+        private String ville;
+        private String pays;
 
-    public User(String id, String name, String sector,
-                List<String> skills,
-                String need,
-                String location,String role) {
-
-        this.id = id;
-        this.name = name;
-        this.sector = sector;
-        this.skills = skills;
-        this.need = need;
-        this.location = location;
-        this.role = role;
+        public double getLatitude() { return latitude; }
+        public void setLatitude(double latitude) { this.latitude = latitude; }
+        public double getLongitude() { return longitude; }
+        public void setLongitude(double longitude) { this.longitude = longitude; }
+        public String getVille() { return ville; }
+        public void setVille(String ville) { this.ville = ville; }
+        public String getPays() { return pays; }
+        public void setPays(String pays) { this.pays = pays; }
     }
 
     public String getId() { return id; }
-    public String getName() { return name; }
-    public String getSector() { return sector; }
-    public List<String> getSkills() { return skills; }
-    public String getNeed() { return need; }
-    public String getLocation() { return location; }
-    public String getRole() {
-        return role;
-    }
+    public void setId(String id) { this.id = id; }
+    public String getNom() { return nom; }
+    public void setNom(String nom) { this.nom = nom; }
+    public String getEmail() { return email; }
+    public void setEmail(String email) { this.email = email; }
+    public String getSecteur() { return secteur; }
+    public void setSecteur(String secteur) { this.secteur = secteur; }
+    public List<String> getCompetences() { return competences; }
+    public void setCompetences(List<String> competences) { this.competences = competences; }
+    public String getBesoin() { return besoin; }
+    public void setBesoin(String besoin) { this.besoin = besoin; }
+    public String getPhotoUrl() { return photoUrl; }
+    public void setPhotoUrl(String photoUrl) { this.photoUrl = photoUrl; }
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
+    public String getFirebaseUid() { return firebaseUid; }
+    public void setFirebaseUid(String firebaseUid) { this.firebaseUid = firebaseUid; }
+    public boolean isActif() { return actif; }
+    public void setActif(boolean actif) { this.actif = actif; }
+    public LocalDateTime getCreatedAt() { return createdAt; }
+    public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
+    public Location getLocalisation() { return localisation; }
+    public void setLocalisation(Location localisation) { this.localisation = localisation; }
+
 }

@@ -1,7 +1,6 @@
 package com.connectentrepreneurs.matching.service;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,13 +22,13 @@ public class MatchingService {
 	@Autowired
 	private ProjectRepository projectRepository;
 	
-	public List<MatchResult> findMatches() {
+	public List<MatchResult> findMatches(String firebaseUid) {
 
 	    List<User> users =
 	            userRepository.findAll();
 
 	    User currentUser =
-	            userRepository.findById("U1")
+	            userRepository.findByFirebaseUid(firebaseUid)
 	                          .orElse(null);
 
 	    if(currentUser == null) {
@@ -62,7 +61,7 @@ public class MatchingService {
 	        results.add(
 	                new MatchResult(
 	                        other.getId(),
-	                        other.getName(),
+	                        other.getNom(),
 	                        score,
 	                        getMatchLevel(score),
 	                        reasons
@@ -86,9 +85,9 @@ public class MatchingService {
 
         int commonSkills = 0;
 
-        for(String skill : current.getSkills()) {
+        for(String skill : current.getCompetences()) {
 
-            if(other.getSkills().stream()
+            if(other.getCompetences().stream()
                     .anyMatch(
                             s -> s.equalsIgnoreCase(skill)
                     )) {
@@ -97,13 +96,13 @@ public class MatchingService {
             }
         }
 
-        if(current.getSkills().isEmpty()) {
+        if(current.getCompetences().isEmpty()) {
             return 0;
         }
 
         double percentage =
                 (double) commonSkills
-                        / current.getSkills().size();
+                        / current.getCompetences().size();
 
         return (int)(percentage * 40);
     }
@@ -114,15 +113,15 @@ public class MatchingService {
         int score = 0;
 
         // secteur
-        if(current.getSector()
-                .equalsIgnoreCase(other.getSector())) {
+        if(current.getSecteur()
+                .equalsIgnoreCase(other.getSecteur())) {
 
             score += 30;
         }
 
         // localisation
-        if(current.getLocation()
-                .equalsIgnoreCase(other.getLocation())) {
+        if(current.getLocalisation().getVille()
+                .equalsIgnoreCase(other.getLocalisation().getVille())) {
 
             score += 10;
         }
@@ -134,11 +133,11 @@ public class MatchingService {
         );
 
         // besoin satisfait
-        if(other.getSkills().stream()
+        if(other.getCompetences().stream()
                 .anyMatch(
                         skill ->
                                 skill.equalsIgnoreCase(
-                                        current.getNeed()
+                                        current.getBesoin()
                                 )
                 )) {
 
@@ -168,17 +167,17 @@ public class MatchingService {
         List<String> reasons =
                 new ArrayList<>();
 
-        if(current.getSector()
-                .equalsIgnoreCase(other.getSector())) {
+        if(current.getSecteur()
+                .equalsIgnoreCase(other.getSecteur())) {
 
             reasons.add(
                     "Même secteur : "
-                            + current.getSector()
+                            + current.getSecteur()
             );
         }
 
-        if(current.getLocation()
-                .equalsIgnoreCase(other.getLocation())) {
+        if(current.getLocalisation().getVille()
+                .equalsIgnoreCase(other.getLocalisation().getVille())) {
 
             reasons.add(
                     "Même localisation"
@@ -186,9 +185,9 @@ public class MatchingService {
         }
 
         for(String skill :
-                current.getSkills()) {
+                current.getCompetences()) {
 
-            if(other.getSkills()
+            if(other.getCompetences()
                     .stream()
                     .anyMatch(
                             s ->
@@ -202,18 +201,18 @@ public class MatchingService {
             }
         }
 
-        if(other.getSkills()
+        if(other.getCompetences()
                 .stream()
                 .anyMatch(
                         skill ->
                                 skill.equalsIgnoreCase(
-                                        current.getNeed()
+                                        current.getBesoin()
                                 )
                 )) {
 
             reasons.add(
                     "Possède la compétence recherchée : "
-                            + current.getNeed()
+                            + current.getBesoin()
             );
         }
 
@@ -226,14 +225,14 @@ public class MatchingService {
 
         int score = 0;
 
-        if(user.getSector()
+        if(user.getSecteur()
                 .equalsIgnoreCase(
                         project.getSecteur())) {
 
             score += 40;
         }
 
-        if(user.getSkills()
+        if(user.getCompetences()
                 .stream()
                 .anyMatch(skill ->
                     skill.equalsIgnoreCase(
@@ -252,7 +251,7 @@ public class MatchingService {
         List<String> reasons =
                 new ArrayList<>();
 
-        if(user.getSector()
+        if(user.getSecteur()
                 .equalsIgnoreCase(
                         project.getSecteur())) {
 
@@ -261,7 +260,7 @@ public class MatchingService {
                 + project.getSecteur());
         }
 
-        if(user.getSkills()
+        if(user.getCompetences()
                 .stream()
                 .anyMatch(skill ->
                     skill.equalsIgnoreCase(
@@ -275,11 +274,12 @@ public class MatchingService {
         return reasons;
     }
     
-    public List<ProjectMatchResult> findProjectMatches() {
+    public List<ProjectMatchResult> findProjectMatches(
+            String firebaseUid) {
 
-        User currentUser =
-                userRepository.findById("U1")
-                              .orElse(null);
+    	User currentUser =
+    	        userRepository.findByFirebaseUid(firebaseUid)
+    	                      .orElse(null);
 
         if(currentUser == null) {
             return new ArrayList<>();
@@ -327,9 +327,10 @@ public class MatchingService {
     }
     
     
-    public List<MatchResult> getSuggestions() {
+    public List<MatchResult> getSuggestions(
+            String firebaseUid) {
 
-        return findMatches()
+    	return findMatches(firebaseUid)
                 .stream()
                 .filter(match ->
                         match.getScore() >= 50)

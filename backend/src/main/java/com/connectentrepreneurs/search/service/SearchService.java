@@ -28,7 +28,7 @@ public class SearchService {
 
                 .filter(user ->
                         skill == null ||
-                        user.getSkills()
+                        		user.getCompetences()
                                 .stream()
                                 .anyMatch(
                                     s -> s.equalsIgnoreCase(skill)
@@ -37,19 +37,19 @@ public class SearchService {
 
                 .filter(user ->
                         sector == null ||
-                        user.getSector()
+                        user.getSecteur()
                                 .equalsIgnoreCase(sector)
                 )
 
                 .filter(user ->
                         location == null ||
-                        user.getLocation()
+                        user.getLocalisation().getVille()
                                 .equalsIgnoreCase(location)
                 )
 
                 .filter(user ->
                         need == null ||
-                        user.getNeed()
+                        user.getBesoin()
                                 .equalsIgnoreCase(need)
                 )
 
