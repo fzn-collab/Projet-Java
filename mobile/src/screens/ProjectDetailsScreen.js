@@ -1,24 +1,7 @@
-import { useState } from "react";
-import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
-
-export default function ProfileScreen({ route, navigation }) {
-  const [user] = useState(route.params.user);
-
-  const userId = route.params?.user?.userId || route.params?.user?.id;
-
-  if (!user) {
-    return (
-      <View
-        style={{
-          flex: 1,
-          justifyContent: "center",
-        }}
-      >
-        <ActivityIndicator size="large" />
-      </View>
-    );
-  }
+export default function ProjectDetailsScreen({ route, navigation }) {
+  const { project } = route.params;
 
   return (
     <View
@@ -62,11 +45,11 @@ export default function ProfileScreen({ route, navigation }) {
             color: "white",
           }}
         >
-          Profile
+          Project
         </Text>
       </View>
 
-      <View
+      <ScrollView
         style={{
           padding: 25,
         }}
@@ -79,7 +62,7 @@ export default function ProfileScreen({ route, navigation }) {
             marginBottom: 20,
           }}
         >
-          {user.nom}
+          {project.titre}
         </Text>
 
         <Text
@@ -88,49 +71,27 @@ export default function ProfileScreen({ route, navigation }) {
             marginBottom: 10,
           }}
         >
-          Sector : {user.secteur}
+          Sector : {project.secteur}
         </Text>
 
         <Text
           style={{
             fontSize: 18,
-            marginBottom: 10,
+            marginBottom: 20,
           }}
         >
-          City : {user.localisation?.ville}
+          Need : {project.besoin}
         </Text>
 
         <Text
           style={{
-            fontSize: 18,
-            marginBottom: 10,
+            fontSize: 16,
+            lineHeight: 24,
           }}
         >
-          Pays : {user.localisation?.pays}
+          {project.description}
         </Text>
-
-        <Text
-          style={{
-            fontSize: 18,
-          }}
-        >
-          Need : {user.besoin}
-        </Text>
-
-        <Text
-          style={{
-            marginTop: 20,
-            fontWeight: "bold",
-            fontSize: 18,
-          }}
-        >
-          Compétences :
-        </Text>
-
-        {user.competences?.map((comp, index) => (
-          <Text key={index}>• {comp}</Text>
-        ))}
-      </View>
+      </ScrollView>
     </View>
   );
 }
