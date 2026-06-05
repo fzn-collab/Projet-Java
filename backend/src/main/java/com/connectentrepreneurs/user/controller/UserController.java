@@ -57,5 +57,12 @@ public class UserController {
             @RequestBody User.Location localisation) {
         return ResponseEntity.ok(userService.updateLocalisation(uid, localisation));
     }
+    @GetMapping("/{id}")
+    public ResponseEntity<User> getUserById(@PathVariable String id) {
+
+        return userService.getUserById(id)
+                .map(ResponseEntity::ok)
+                .orElse(ResponseEntity.notFound().build());
+    }
 
 }

@@ -35,15 +35,12 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/org/springframework/data/spring-data-mongodb/4.2.0/spring-data-mongodb-4.2.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/springframework/spring-tx/6.1.1/spring-tx-6.1.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/springframework/data/spring-data-commons/3.2.0/spring-data-commons-3.2.0.jar" enabled="true" runInBatchMode="false"/>
-<<<<<<< HEAD
     <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-api/0.11.5/jjwt-api-0.11.5.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-impl/0.11.5/jjwt-impl-0.11.5.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-jackson/0.11.5/jjwt-jackson-0.11.5.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3.jar" enabled="true" runInBatchMode="false"/>
-=======
->>>>>>> origin/feature/maryabackend
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/firebase/firebase-admin/9.2.0/firebase-admin-9.2.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/api-client/google-api-client/2.2.0/google-api-client-2.2.0.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/commons-codec/commons-codec/1.16.0/commons-codec-1.16.0.jar" enabled="true" runInBatchMode="false"/>
@@ -92,10 +89,6 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/api/grpc/proto-google-cloud-storage-v2/2.22.4-alpha/proto-google-cloud-storage-v2-2.22.4-alpha.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/api/grpc/grpc-google-cloud-storage-v2/2.22.4-alpha/grpc-google-cloud-storage-v2-2.22.4-alpha.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/com/google/api/grpc/gapic-google-cloud-storage-v2/2.22.4-alpha/gapic-google-cloud-storage-v2-2.22.4-alpha.jar" enabled="true" runInBatchMode="false"/>
-<<<<<<< HEAD
-=======
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-core/2.15.3/jackson-core-2.15.3.jar" enabled="true" runInBatchMode="false"/>
->>>>>>> origin/feature/maryabackend
     <factorypathentry kind="VARJAR" id="M2_REPO/io/grpc/grpc-api/1.55.1/grpc-api-1.55.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/grpc/grpc-netty-shaded/1.55.1/grpc-netty-shaded-1.55.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/perfmark/perfmark-api/0.26.0/perfmark-api-0.26.0.jar" enabled="true" runInBatchMode="false"/>
@@ -125,14 +118,6 @@
     <factorypathentry kind="VARJAR" id="M2_REPO/io/netty/netty-resolver/4.1.101.Final/netty-resolver-4.1.101.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/netty/netty-transport-native-unix-common/4.1.101.Final/netty-transport-native-unix-common-4.1.101.Final.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/io/netty/netty-transport/4.1.101.Final/netty-transport-4.1.101.Final.jar" enabled="true" runInBatchMode="false"/>
-<<<<<<< HEAD
-=======
-    <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-api/0.11.5/jjwt-api-0.11.5.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-impl/0.11.5/jjwt-impl-0.11.5.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/io/jsonwebtoken/jjwt-jackson/0.11.5/jjwt-jackson-0.11.5.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-databind/2.15.3/jackson-databind-2.15.3.jar" enabled="true" runInBatchMode="false"/>
-    <factorypathentry kind="VARJAR" id="M2_REPO/com/fasterxml/jackson/core/jackson-annotations/2.15.3/jackson-annotations-2.15.3.jar" enabled="true" runInBatchMode="false"/>
->>>>>>> origin/feature/maryabackend
     <factorypathentry kind="VARJAR" id="M2_REPO/org/projectlombok/lombok/1.18.30/lombok-1.18.30.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/springframework/spring-core/6.1.1/spring-core-6.1.1.jar" enabled="true" runInBatchMode="false"/>
     <factorypathentry kind="VARJAR" id="M2_REPO/org/springframework/spring-jcl/6.1.1/spring-jcl-6.1.1.jar" enabled="true" runInBatchMode="false"/>

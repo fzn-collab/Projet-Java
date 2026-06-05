@@ -21,36 +21,37 @@ public class SearchService {
             String location,
             String need) {
 
-        List<User> users =
-                userRepository.findAll();
+        List<User> users = userRepository.findAll();
 
         return users.stream()
 
                 .filter(user ->
                         skill == null ||
-                        		user.getCompetences()
-                                .stream()
+                        (user.getCompetences() != null &&
+                         user.getCompetences().stream()
                                 .anyMatch(
                                     s -> s.equalsIgnoreCase(skill)
-                                )
+                                ))
                 )
 
                 .filter(user ->
                         sector == null ||
-                        user.getSecteur()
-                                .equalsIgnoreCase(sector)
+                        (user.getSecteur() != null &&
+                         user.getSecteur().equalsIgnoreCase(sector))
                 )
 
                 .filter(user ->
                         location == null ||
-                        user.getLocalisation().getVille()
-                                .equalsIgnoreCase(location)
+                        (user.getLocalisation() != null &&
+                         user.getLocalisation().getVille() != null &&
+                         user.getLocalisation().getVille()
+                             .equalsIgnoreCase(location))
                 )
 
                 .filter(user ->
                         need == null ||
-                        user.getBesoin()
-                                .equalsIgnoreCase(need)
+                        (user.getBesoin() != null &&
+                         user.getBesoin().equalsIgnoreCase(need))
                 )
 
                 .collect(Collectors.toList());

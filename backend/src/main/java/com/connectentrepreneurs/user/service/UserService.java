@@ -5,6 +5,7 @@ import com.connectentrepreneurs.user.model.User;
 import com.connectentrepreneurs.user.repository.UserRepository;
 import org.springframework.stereotype.Service;
 import java.util.List;
+import java.util.Optional;
 
 
 @Service
@@ -52,6 +53,10 @@ public class UserService {
         User user = getByFirebaseUid(firebaseUid);
         user.setLocalisation(localisation);
         return userRepository.save(user);
+    }
+    
+    public Optional<User> getUserById(String id) {
+        return userRepository.findById(id);
     }
 
 }

@@ -85,20 +85,27 @@ public class MatchingService {
 
         int commonSkills = 0;
 
-        for(String skill : current.getCompetences()) {
+        if(current.getCompetences() == null ||
+        		   other.getCompetences() == null) {
+        		    return 0;
+        		}
 
-            if(other.getCompetences().stream()
-                    .anyMatch(
-                            s -> s.equalsIgnoreCase(skill)
-                    )) {
+        		for(String skill : current.getCompetences()) {
 
-                commonSkills++;
-            }
-        }
+        		    if(other.getCompetences().stream()
+        		            .anyMatch(
+        		                    s -> s.equalsIgnoreCase(skill)
+        		            )) {
 
-        if(current.getCompetences().isEmpty()) {
-            return 0;
-        }
+        		        commonSkills++;
+        		    }
+        		}
+
+        		if(current.getCompetences() == null ||
+        				   current.getCompetences().isEmpty() ||
+        				   other.getCompetences() == null) {
+        				    return 0;
+        				}
 
         double percentage =
                 (double) commonSkills
@@ -113,18 +120,23 @@ public class MatchingService {
         int score = 0;
 
         // secteur
-        if(current.getSecteur()
-                .equalsIgnoreCase(other.getSecteur())) {
+        if(current.getSecteur() != null &&
+        		   other.getSecteur() != null &&
+        		   current.getSecteur().equalsIgnoreCase(other.getSecteur())) {
 
-            score += 30;
-        }
+        		    score += 30;
+        		}
 
         // localisation
-        if(current.getLocalisation().getVille()
-                .equalsIgnoreCase(other.getLocalisation().getVille())) {
+        if(current.getLocalisation() != null
+        	    && other.getLocalisation() != null
+        	    && current.getLocalisation().getVille() != null
+        	    && other.getLocalisation().getVille() != null
+        	    && current.getLocalisation().getVille()
+        	          .equalsIgnoreCase(other.getLocalisation().getVille())) {
 
-            score += 10;
-        }
+        	    score += 10;
+        	}
 
         // compétences
         score += calculateSkillScore(
@@ -133,16 +145,18 @@ public class MatchingService {
         );
 
         // besoin satisfait
-        if(other.getCompetences().stream()
-                .anyMatch(
-                        skill ->
-                                skill.equalsIgnoreCase(
-                                        current.getBesoin()
-                                )
-                )) {
+        if(current.getBesoin() != null &&
+        		   other.getCompetences() != null &&
+        		   other.getCompetences().stream()
+        		        .anyMatch(
+        		                skill ->
+        		                        skill.equalsIgnoreCase(
+        		                                current.getBesoin()
+        		                        )
+        		        )) {
 
-            score += 20;
-        }
+        		    score += 20;
+        		}
 
         return Math.min(score,100);
     }
@@ -167,8 +181,9 @@ public class MatchingService {
         List<String> reasons =
                 new ArrayList<>();
 
-        if(current.getSecteur()
-                .equalsIgnoreCase(other.getSecteur())) {
+        if(current.getSecteur() != null &&
+        		   other.getSecteur() != null &&
+        		   current.getSecteur().equalsIgnoreCase(other.getSecteur())) {
 
             reasons.add(
                     "Même secteur : "
@@ -176,39 +191,45 @@ public class MatchingService {
             );
         }
 
-        if(current.getLocalisation().getVille()
-                .equalsIgnoreCase(other.getLocalisation().getVille())) {
+        if(current.getLocalisation() != null &&
+        		   other.getLocalisation() != null &&
+        		   current.getLocalisation().getVille() != null &&
+        		   other.getLocalisation().getVille() != null &&
+        		   current.getLocalisation().getVille()
+        		          .equalsIgnoreCase(other.getLocalisation().getVille())){
 
             reasons.add(
                     "Même localisation"
             );
         }
 
-        for(String skill :
-                current.getCompetences()) {
+        if(current.getCompetences() != null &&
+        		   other.getCompetences() != null) {
 
-            if(other.getCompetences()
-                    .stream()
-                    .anyMatch(
-                            s ->
-                                    s.equalsIgnoreCase(skill)
-                    )) {
+        		    for(String skill : current.getCompetences()) {
 
-                reasons.add(
-                        "Compétence commune : "
-                                + skill
-                );
-            }
-        }
+        		        if(other.getCompetences()
+        		                .stream()
+        		                .anyMatch(
+        		                    s -> s.equalsIgnoreCase(skill)
+        		                )) {
 
-        if(other.getCompetences()
-                .stream()
-                .anyMatch(
-                        skill ->
-                                skill.equalsIgnoreCase(
-                                        current.getBesoin()
-                                )
-                )) {
+        		            reasons.add(
+        		                "Compétence commune : " + skill
+        		            );
+        		        }
+        		    }
+        		}
+        if(current.getBesoin() != null
+                && other.getCompetences() != null
+                && other.getCompetences()
+                        .stream()
+                        .anyMatch(
+                                skill ->
+                                        skill.equalsIgnoreCase(
+                                                current.getBesoin()
+                                        )
+                        )) {
 
             reasons.add(
                     "Possède la compétence recherchée : "
@@ -232,15 +253,16 @@ public class MatchingService {
             score += 40;
         }
 
-        if(user.getCompetences()
-                .stream()
-                .anyMatch(skill ->
-                    skill.equalsIgnoreCase(
-                        project.getBesoin()))) {
+        if(user.getCompetences() != null
+                && project.getBesoin() != null
+                && user.getCompetences()
+                       .stream()
+                       .anyMatch(skill ->
+                           skill.equalsIgnoreCase(
+                               project.getBesoin()))) {
 
             score += 60;
         }
-
         return Math.min(score,100);
     }
     
@@ -260,17 +282,18 @@ public class MatchingService {
                 + project.getSecteur());
         }
 
-        if(user.getCompetences()
-                .stream()
-                .anyMatch(skill ->
-                    skill.equalsIgnoreCase(
-                        project.getBesoin()))) {
+        if(user.getCompetences() != null
+                && project.getBesoin() != null
+                && user.getCompetences()
+                       .stream()
+                       .anyMatch(skill ->
+                           skill.equalsIgnoreCase(
+                               project.getBesoin()))) {
 
             reasons.add(
                 "Le projet recherche : "
                 + project.getBesoin());
         }
-
         return reasons;
     }
     
