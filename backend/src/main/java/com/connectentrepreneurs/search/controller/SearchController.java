@@ -20,13 +20,15 @@ public class SearchController {
             @RequestParam(required = false) String skill,
             @RequestParam(required = false) String sector,
             @RequestParam(required = false) String location,
-            @RequestParam(required = false) String need) {
+            @RequestParam(required = false) String need,
+            @RequestParam(required = false) String typeProfil) {
 
         return searchService.search(
                 skill,
                 sector,
                 location,
-                need
+                need,
+                typeProfil
         );
     }
 }

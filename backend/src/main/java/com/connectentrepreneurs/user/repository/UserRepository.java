@@ -11,5 +11,7 @@ public interface UserRepository extends MongoRepository<User, String> {
     Optional<User> findByEmail(String email);
     List<User> findBySecteur(String secteur);
     List<User> findByCompetencesContaining(String competence);
+    boolean existsByFirebaseUid(String firebaseUid);
+    boolean existsByEmail(String email);
 
 }

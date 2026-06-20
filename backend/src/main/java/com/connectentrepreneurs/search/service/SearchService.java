@@ -19,7 +19,8 @@ public class SearchService {
             String skill,
             String sector,
             String location,
-            String need) {
+            String need,
+            String typeProfil) {
 
         List<User> users = userRepository.findAll();
 
@@ -53,6 +54,11 @@ public class SearchService {
                         (user.getBesoin() != null &&
                          user.getBesoin().equalsIgnoreCase(need))
                 )
+                .filter(user ->
+		                typeProfil == null ||
+		                (user.getTypeProfil() != null &&
+		                 user.getTypeProfil().equalsIgnoreCase(typeProfil))
+		        )
 
                 .collect(Collectors.toList());
     }

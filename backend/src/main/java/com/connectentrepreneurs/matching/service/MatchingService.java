@@ -15,318 +15,347 @@ import com.connectentrepreneurs.user.repository.UserRepository;
 
 @Service
 public class MatchingService {
-	@Autowired
-	private UserRepository userRepository;
-	
-	
-	@Autowired
-	private ProjectRepository projectRepository;
-	
-	public List<MatchResult> findMatches(String firebaseUid) {
 
-	    List<User> users =
-	            userRepository.findAll();
+    @Autowired
+    private UserRepository userRepository;
 
-	    User currentUser =
-	            userRepository.findByFirebaseUid(firebaseUid)
-	                          .orElse(null);
+    @Autowired
+    private ProjectRepository projectRepository;
 
-	    if(currentUser == null) {
-	        return new ArrayList<>();
-	    }
+    public List<MatchResult> findMatches(String firebaseUid) {
 
-	    List<MatchResult> results =
-	            new ArrayList<>();
+        List<User> users = userRepository.findAll();
 
-	    for(User other : users) {
+        User currentUser = userRepository
+                .findByFirebaseUid(firebaseUid)
+                .orElse(null);
 
-	        if(other.getId()
-	                .equals(currentUser.getId())) {
+        if (currentUser == null) {
+            return new ArrayList<>();
+        }
 
-	            continue;
-	        }
+        List<MatchResult> results = new ArrayList<>();
 
-	        int score =
-	                calculateScore(
-	                        currentUser,
-	                        other
-	                );
+        for (User other : users) {
 
-	        List<String> reasons =
-	                generateReasons(
-	                        currentUser,
-	                        other
-	                );
+            if (other.getId() != null
+                    && other.getId().equals(currentUser.getId())) {
+                continue;
+            }
 
-	        results.add(
-	                new MatchResult(
-	                        other.getId(),
-	                        other.getNom(),
-	                        score,
-	                        getMatchLevel(score),
-	                        reasons
-	                )
-	        );
-	    }
+            int score = calculateScore(currentUser, other);
+            List<String> reasons = generateReasons(currentUser, other);
 
-	    results.sort(
-	            (a,b) ->
-	                    Integer.compare(
-	                            b.getScore(),
-	                            a.getScore()
-	                    )
-	    );
+            results.add(
+                    new MatchResult(
+                            other.getId(),
+                            other.getNom(),
+                            score,
+                            getMatchLevel(score),
+                            reasons
+                    )
+            );
+        }
 
-	    return results;
-	}
+        results.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
 
-    private int calculateSkillScore(User current,
-                                    User other) {
-
-        int commonSkills = 0;
-
-        if(current.getCompetences() == null ||
-        		   other.getCompetences() == null) {
-        		    return 0;
-        		}
-
-        		for(String skill : current.getCompetences()) {
-
-        		    if(other.getCompetences().stream()
-        		            .anyMatch(
-        		                    s -> s.equalsIgnoreCase(skill)
-        		            )) {
-
-        		        commonSkills++;
-        		    }
-        		}
-
-        		if(current.getCompetences() == null ||
-        				   current.getCompetences().isEmpty() ||
-        				   other.getCompetences() == null) {
-        				    return 0;
-        				}
-
-        double percentage =
-                (double) commonSkills
-                        / current.getCompetences().size();
-
-        return (int)(percentage * 40);
+        return results;
     }
 
-    private int calculateScore(User current,
-                               User other) {
+    private int calculateScore(User current, User other) {
 
         int score = 0;
 
-        // secteur
-        if(current.getSecteur() != null &&
-        		   other.getSecteur() != null &&
-        		   current.getSecteur().equalsIgnoreCase(other.getSecteur())) {
+        if (sameSecteur(current, other)) {
+            score += 25;
+        }
 
-        		    score += 30;
-        		}
+        if (sameVille(current, other)) {
+            score += 10;
+        }
 
-        // localisation
-        if(current.getLocalisation() != null
-        	    && other.getLocalisation() != null
-        	    && current.getLocalisation().getVille() != null
-        	    && other.getLocalisation().getVille() != null
-        	    && current.getLocalisation().getVille()
-        	          .equalsIgnoreCase(other.getLocalisation().getVille())) {
+        if (samePays(current, other)) {
+            score += 5;
+        }
 
-        	    score += 10;
-        	}
+        score += calculateSkillScore(current, other);
 
-        // compétences
-        score += calculateSkillScore(
-                current,
-                other
-        );
+        if (besoinSatisfied(current, other)) {
+            score += 20;
+        }
 
-        // besoin satisfait
-        if(current.getBesoin() != null &&
-        		   other.getCompetences() != null &&
-        		   other.getCompetences().stream()
-        		        .anyMatch(
-        		                skill ->
-        		                        skill.equalsIgnoreCase(
-        		                                current.getBesoin()
-        		                        )
-        		        )) {
+        if (isComplementary(current, other)) {
+            score += 10;
+        }
 
-        		    score += 20;
-        		}
+        return Math.min(score, 100);
+    }
 
-        return Math.min(score,100);
+    private int calculateSkillScore(User current, User other) {
+
+        if (current.getCompetences() == null
+                || current.getCompetences().isEmpty()
+                || other.getCompetences() == null
+                || other.getCompetences().isEmpty()) {
+            return 0;
+        }
+
+        int commonSkills = 0;
+
+        for (String skill : current.getCompetences()) {
+
+            if (skill == null) {
+                continue;
+            }
+
+            if (other.getCompetences()
+                    .stream()
+                    .anyMatch(s ->
+                            s != null &&
+                            s.equalsIgnoreCase(skill))) {
+
+                commonSkills++;
+            }
+        }
+
+        double percentage =
+                (double) commonSkills / current.getCompetences().size();
+
+        return (int) (percentage * 30);
+    }
+
+    private boolean sameSecteur(User current, User other) {
+        return current.getSecteur() != null
+                && other.getSecteur() != null
+                && current.getSecteur()
+                        .equalsIgnoreCase(other.getSecteur());
+    }
+
+    private boolean sameVille(User current, User other) {
+        return current.getLocalisation() != null
+                && other.getLocalisation() != null
+                && current.getLocalisation().getVille() != null
+                && other.getLocalisation().getVille() != null
+                && current.getLocalisation().getVille()
+                        .equalsIgnoreCase(
+                                other.getLocalisation().getVille()
+                        );
+    }
+
+    private boolean samePays(User current, User other) {
+        return current.getLocalisation() != null
+                && other.getLocalisation() != null
+                && current.getLocalisation().getPays() != null
+                && other.getLocalisation().getPays() != null
+                && current.getLocalisation().getPays()
+                        .equalsIgnoreCase(
+                                other.getLocalisation().getPays()
+                        );
+    }
+
+    private boolean besoinSatisfied(User current, User other) {
+
+        if (current.getBesoin() == null
+                || other.getCompetences() == null) {
+            return false;
+        }
+
+        return other.getCompetences()
+                .stream()
+                .anyMatch(skill ->
+                        skill != null &&
+                        skill.equalsIgnoreCase(current.getBesoin()));
+    }
+
+    private boolean isComplementary(User current, User other) {
+
+        if (current.getTypeProfil() == null
+                || other.getTypeProfil() == null) {
+            return false;
+        }
+
+        String currentType = current.getTypeProfil();
+        String otherType = other.getTypeProfil();
+
+        String currentBesoin =
+                current.getBesoin() == null
+                        ? ""
+                        : current.getBesoin().toLowerCase();
+
+        String otherBesoin =
+                other.getBesoin() == null
+                        ? ""
+                        : other.getBesoin().toLowerCase();
+
+        if (currentType.equalsIgnoreCase("PORTEUR_PROJET")
+                && otherBesoin.contains("projet")) {
+            return true;
+        }
+
+        if (currentType.equalsIgnoreCase("DEVELOPPEUR")
+                && otherBesoin.contains("développeur")) {
+            return true;
+        }
+
+        if (currentType.equalsIgnoreCase("INVESTISSEUR")
+                && otherBesoin.contains("investisseur")) {
+            return true;
+        }
+
+        if (otherType.equalsIgnoreCase("PORTEUR_PROJET")
+                && currentBesoin.contains("projet")) {
+            return true;
+        }
+
+        return false;
     }
 
     private String getMatchLevel(int score) {
 
-        if(score >= 80)
+        if (score >= 80) {
             return "Excellent";
+        }
 
-        if(score >= 60)
+        if (score >= 60) {
             return "Bon";
+        }
 
-        if(score >= 40)
+        if (score >= 40) {
             return "Moyen";
+        }
 
         return "Faible";
     }
 
-    private List<String> generateReasons(User current,
-                                         User other) {
+    private List<String> generateReasons(User current, User other) {
 
-        List<String> reasons =
-                new ArrayList<>();
+        List<String> reasons = new ArrayList<>();
 
-        if(current.getSecteur() != null &&
-        		   other.getSecteur() != null &&
-        		   current.getSecteur().equalsIgnoreCase(other.getSecteur())) {
-
-            reasons.add(
-                    "Même secteur : "
-                            + current.getSecteur()
-            );
+        if (sameSecteur(current, other)) {
+            reasons.add("Même secteur : " + current.getSecteur());
         }
 
-        if(current.getLocalisation() != null &&
-        		   other.getLocalisation() != null &&
-        		   current.getLocalisation().getVille() != null &&
-        		   other.getLocalisation().getVille() != null &&
-        		   current.getLocalisation().getVille()
-        		          .equalsIgnoreCase(other.getLocalisation().getVille())){
-
-            reasons.add(
-                    "Même localisation"
-            );
+        if (sameVille(current, other)) {
+            reasons.add("Même ville : "
+                    + current.getLocalisation().getVille());
         }
 
-        if(current.getCompetences() != null &&
-        		   other.getCompetences() != null) {
+        if (samePays(current, other)) {
+            reasons.add("Même pays : "
+                    + current.getLocalisation().getPays());
+        }
 
-        		    for(String skill : current.getCompetences()) {
+        if (current.getCompetences() != null
+                && other.getCompetences() != null) {
 
-        		        if(other.getCompetences()
-        		                .stream()
-        		                .anyMatch(
-        		                    s -> s.equalsIgnoreCase(skill)
-        		                )) {
+            for (String skill : current.getCompetences()) {
 
-        		            reasons.add(
-        		                "Compétence commune : " + skill
-        		            );
-        		        }
-        		    }
-        		}
-        if(current.getBesoin() != null
-                && other.getCompetences() != null
-                && other.getCompetences()
+                if (skill == null) {
+                    continue;
+                }
+
+                if (other.getCompetences()
                         .stream()
-                        .anyMatch(
-                                skill ->
-                                        skill.equalsIgnoreCase(
-                                                current.getBesoin()
-                                        )
-                        )) {
+                        .anyMatch(s ->
+                                s != null &&
+                                s.equalsIgnoreCase(skill))) {
 
-            reasons.add(
-                    "Possède la compétence recherchée : "
-                            + current.getBesoin()
-            );
+                    reasons.add("Compétence commune : " + skill);
+                }
+            }
+        }
+
+        if (besoinSatisfied(current, other)) {
+            reasons.add("Possède la compétence recherchée : "
+                    + current.getBesoin());
+        }
+
+        if (isComplementary(current, other)) {
+            reasons.add("Profil complémentaire : "
+                    + current.getTypeProfil()
+                    + " ↔ "
+                    + other.getTypeProfil());
         }
 
         return reasons;
     }
-    
-    private int calculateProjectScore(
-            User user,
-            Project project) {
+
+    private int calculateProjectScore(User user, Project project) {
 
         int score = 0;
 
-        if(user.getSecteur()
-                .equalsIgnoreCase(
-                        project.getSecteur())) {
-
+        if (user.getSecteur() != null
+                && project.getSecteur() != null
+                && user.getSecteur()
+                        .equalsIgnoreCase(project.getSecteur())) {
             score += 40;
         }
 
-        if(user.getCompetences() != null
+        if (user.getCompetences() != null
                 && project.getBesoin() != null
                 && user.getCompetences()
-                       .stream()
-                       .anyMatch(skill ->
-                           skill.equalsIgnoreCase(
-                               project.getBesoin()))) {
-
+                        .stream()
+                        .anyMatch(skill ->
+                                skill != null &&
+                                skill.equalsIgnoreCase(
+                                        project.getBesoin()
+                                ))) {
             score += 60;
         }
-        return Math.min(score,100);
+
+        return Math.min(score, 100);
     }
-    
+
     private List<String> generateProjectReasons(
             User user,
             Project project) {
 
-        List<String> reasons =
-                new ArrayList<>();
+        List<String> reasons = new ArrayList<>();
 
-        if(user.getSecteur()
-                .equalsIgnoreCase(
-                        project.getSecteur())) {
+        if (user.getSecteur() != null
+                && project.getSecteur() != null
+                && user.getSecteur()
+                        .equalsIgnoreCase(project.getSecteur())) {
 
-            reasons.add(
-                "Même secteur : "
-                + project.getSecteur());
+            reasons.add("Même secteur : " + project.getSecteur());
         }
 
-        if(user.getCompetences() != null
+        if (user.getCompetences() != null
                 && project.getBesoin() != null
                 && user.getCompetences()
-                       .stream()
-                       .anyMatch(skill ->
-                           skill.equalsIgnoreCase(
-                               project.getBesoin()))) {
+                        .stream()
+                        .anyMatch(skill ->
+                                skill != null &&
+                                skill.equalsIgnoreCase(
+                                        project.getBesoin()
+                                ))) {
 
-            reasons.add(
-                "Le projet recherche : "
-                + project.getBesoin());
+            reasons.add("Le projet recherche : "
+                    + project.getBesoin());
         }
+
         return reasons;
     }
-    
+
     public List<ProjectMatchResult> findProjectMatches(
             String firebaseUid) {
 
-    	User currentUser =
-    	        userRepository.findByFirebaseUid(firebaseUid)
-    	                      .orElse(null);
+        User currentUser = userRepository
+                .findByFirebaseUid(firebaseUid)
+                .orElse(null);
 
-        if(currentUser == null) {
+        if (currentUser == null) {
             return new ArrayList<>();
         }
 
-        List<Project> projects =
-                projectRepository.findAll();
+        List<Project> projects = projectRepository.findAll();
+        List<ProjectMatchResult> results = new ArrayList<>();
 
-        List<ProjectMatchResult> results =
-                new ArrayList<>();
+        for (Project project : projects) {
 
-        for(Project project : projects) {
-
-            int score =
-                    calculateProjectScore(
-                            currentUser,
-                            project
-                    );
-
+            int score = calculateProjectScore(currentUser, project);
             List<String> reasons =
-                    generateProjectReasons(
-                            currentUser,
-                            project
-                    );
+                    generateProjectReasons(currentUser, project);
 
             results.add(
                     new ProjectMatchResult(
@@ -338,25 +367,16 @@ public class MatchingService {
             );
         }
 
-        results.sort(
-                (a,b) ->
-                        Integer.compare(
-                                b.getScore(),
-                                a.getScore()
-                        )
-        );
+        results.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
 
         return results;
     }
-    
-    
-    public List<MatchResult> getSuggestions(
-            String firebaseUid) {
 
-    	return findMatches(firebaseUid)
+    public List<MatchResult> getSuggestions(String firebaseUid) {
+
+        return findMatches(firebaseUid)
                 .stream()
-                .filter(match ->
-                        match.getScore() >= 50)
+                .filter(match -> match.getScore() >= 50)
                 .limit(3)
                 .toList();
     }

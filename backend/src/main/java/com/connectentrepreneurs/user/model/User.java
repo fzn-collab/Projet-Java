@@ -20,6 +20,7 @@ public class User {
     private boolean actif = true;
     private LocalDateTime createdAt = LocalDateTime.now();
     private Location localisation;
+    private String typeProfil;
 
     public static class Location {
         private double latitude;
@@ -61,5 +62,7 @@ public class User {
     public void setCreatedAt(LocalDateTime createdAt) { this.createdAt = createdAt; }
     public Location getLocalisation() { return localisation; }
     public void setLocalisation(Location localisation) { this.localisation = localisation; }
-
+    public String getTypeProfil() { return typeProfil; }
+    public void setTypeProfil(String typeProfil) { this.typeProfil = typeProfil; }
+    
 }

@@ -19,9 +19,27 @@ public class UserService {
     }
 
     public User createUser(User user) {
+
+        if (user.getFirebaseUid() != null) {
+            Optional<User> existingByUid =
+                    userRepository.findByFirebaseUid(user.getFirebaseUid());
+
+            if (existingByUid.isPresent()) {
+                return existingByUid.get();
+            }
+        }
+
+        if (user.getEmail() != null) {
+            Optional<User> existingByEmail =
+                    userRepository.findByEmail(user.getEmail());
+
+            if (existingByEmail.isPresent()) {
+                return existingByEmail.get();
+            }
+        }
+
         return userRepository.save(user);
     }
-
     public User getByFirebaseUid(String firebaseUid) {
         return userRepository.findByFirebaseUid(firebaseUid)
                 .orElseThrow(() -> new RuntimeException("User not found"));
@@ -33,6 +51,8 @@ public class UserService {
         user.setSecteur(updatedUser.getSecteur());
         user.setCompetences(updatedUser.getCompetences());
         user.setBesoin(updatedUser.getBesoin());
+        user.setTypeProfil(updatedUser.getTypeProfil());
+        user.setLocalisation(updatedUser.getLocalisation());
         return userRepository.save(user);
     }
 
@@ -57,6 +77,19 @@ public class UserService {
     
     public Optional<User> getUserById(String id) {
         return userRepository.findById(id);
+    }
+    
+    public boolean isProfileComplete(User user) {
+        return user.getNom() != null && !user.getNom().isBlank()
+            && user.getTypeProfil() != null && !user.getTypeProfil().isBlank()
+            && user.getSecteur() != null && !user.getSecteur().isBlank()
+            && user.getCompetences() != null && !user.getCompetences().isEmpty()
+            && user.getBesoin() != null && !user.getBesoin().isBlank()
+            && user.getLocalisation() != null
+            && user.getLocalisation().getVille() != null
+            && !user.getLocalisation().getVille().isBlank()
+            && user.getLocalisation().getPays() != null
+            && !user.getLocalisation().getPays().isBlank();
     }
 
 }

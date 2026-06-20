@@ -64,5 +64,13 @@ public class UserController {
                 .map(ResponseEntity::ok)
                 .orElse(ResponseEntity.notFound().build());
     }
+    
+    @GetMapping("/me/completion")
+    public ResponseEntity<Boolean> isProfileComplete(
+            @RequestHeader("X-User-Id") String uid) {
+
+        User user = userService.getByFirebaseUid(uid);
+        return ResponseEntity.ok(userService.isProfileComplete(user));
+    }
 
 }
