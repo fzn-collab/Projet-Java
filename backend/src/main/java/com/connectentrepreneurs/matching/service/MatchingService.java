@@ -46,15 +46,17 @@ public class MatchingService {
             int score = calculateScore(currentUser, other);
             List<String> reasons = generateReasons(currentUser, other);
 
-            results.add(
-                    new MatchResult(
-                            other.getId(),
-                            other.getNom(),
-                            score,
-                            getMatchLevel(score),
-                            reasons
-                    )
-            );
+            if (score > 0) {
+                results.add(
+                        new MatchResult(
+                                other.getId(),
+                                other.getNom(),
+                                score,
+                                getMatchLevel(score),
+                                reasons
+                        )
+                );
+            }
         }
 
         results.sort((a, b) -> Integer.compare(b.getScore(), a.getScore()));
@@ -67,7 +69,7 @@ public class MatchingService {
         int score = 0;
 
         if (sameSecteur(current, other)) {
-            score += 25;
+            score += 20;
         }
 
         if (sameVille(current, other)) {
@@ -80,12 +82,12 @@ public class MatchingService {
 
         score += calculateSkillScore(current, other);
 
-        if (besoinSatisfied(current, other)) {
-            score += 20;
+        if (otherCanHelpCurrent(current, other)) {
+            score += 30;
         }
 
-        if (isComplementary(current, other)) {
-            score += 10;
+        if (currentCanHelpOther(current, other)) {
+            score += 20;
         }
 
         return Math.min(score, 100);
@@ -113,7 +115,6 @@ public class MatchingService {
                     .anyMatch(s ->
                             s != null &&
                             s.equalsIgnoreCase(skill))) {
-
                 commonSkills++;
             }
         }
@@ -121,14 +122,14 @@ public class MatchingService {
         double percentage =
                 (double) commonSkills / current.getCompetences().size();
 
-        return (int) (percentage * 30);
+        return (int) (percentage * 20);
     }
 
     private boolean sameSecteur(User current, User other) {
         return current.getSecteur() != null
                 && other.getSecteur() != null
                 && current.getSecteur()
-                        .equalsIgnoreCase(other.getSecteur());
+                .equalsIgnoreCase(other.getSecteur());
     }
 
     private boolean sameVille(User current, User other) {
@@ -137,9 +138,7 @@ public class MatchingService {
                 && current.getLocalisation().getVille() != null
                 && other.getLocalisation().getVille() != null
                 && current.getLocalisation().getVille()
-                        .equalsIgnoreCase(
-                                other.getLocalisation().getVille()
-                        );
+                .equalsIgnoreCase(other.getLocalisation().getVille());
     }
 
     private boolean samePays(User current, User other) {
@@ -148,66 +147,36 @@ public class MatchingService {
                 && current.getLocalisation().getPays() != null
                 && other.getLocalisation().getPays() != null
                 && current.getLocalisation().getPays()
-                        .equalsIgnoreCase(
-                                other.getLocalisation().getPays()
-                        );
+                .equalsIgnoreCase(other.getLocalisation().getPays());
     }
 
-    private boolean besoinSatisfied(User current, User other) {
+    private boolean otherCanHelpCurrent(User current, User other) {
+        return needSatisfiedBySkills(
+                current.getBesoin(),
+                other.getCompetences()
+        );
+    }
 
-        if (current.getBesoin() == null
-                || other.getCompetences() == null) {
+    private boolean currentCanHelpOther(User current, User other) {
+        return needSatisfiedBySkills(
+                other.getBesoin(),
+                current.getCompetences()
+        );
+    }
+
+    private boolean needSatisfiedBySkills(String besoin, List<String> competences) {
+
+        if (besoin == null || competences == null || competences.isEmpty()) {
             return false;
         }
 
-        return other.getCompetences()
-                .stream()
+        String besoinLower = besoin.toLowerCase();
+
+        return competences.stream()
                 .anyMatch(skill ->
                         skill != null &&
-                        skill.equalsIgnoreCase(current.getBesoin()));
-    }
-
-    private boolean isComplementary(User current, User other) {
-
-        if (current.getTypeProfil() == null
-                || other.getTypeProfil() == null) {
-            return false;
-        }
-
-        String currentType = current.getTypeProfil();
-        String otherType = other.getTypeProfil();
-
-        String currentBesoin =
-                current.getBesoin() == null
-                        ? ""
-                        : current.getBesoin().toLowerCase();
-
-        String otherBesoin =
-                other.getBesoin() == null
-                        ? ""
-                        : other.getBesoin().toLowerCase();
-
-        if (currentType.equalsIgnoreCase("PORTEUR_PROJET")
-                && otherBesoin.contains("projet")) {
-            return true;
-        }
-
-        if (currentType.equalsIgnoreCase("DEVELOPPEUR")
-                && otherBesoin.contains("développeur")) {
-            return true;
-        }
-
-        if (currentType.equalsIgnoreCase("INVESTISSEUR")
-                && otherBesoin.contains("investisseur")) {
-            return true;
-        }
-
-        if (otherType.equalsIgnoreCase("PORTEUR_PROJET")
-                && currentBesoin.contains("projet")) {
-            return true;
-        }
-
-        return false;
+                        besoinLower.contains(skill.toLowerCase())
+                );
     }
 
     private String getMatchLevel(int score) {
@@ -245,6 +214,19 @@ public class MatchingService {
                     + current.getLocalisation().getPays());
         }
 
+        if (otherCanHelpCurrent(current, other)) {
+            reasons.add(other.getNom()
+                    + " peut répondre à votre besoin : "
+                    + current.getBesoin());
+        }
+
+        if (currentCanHelpOther(current, other)) {
+            reasons.add("Vous pouvez répondre au besoin de "
+                    + other.getNom()
+                    + " : "
+                    + other.getBesoin());
+        }
+
         if (current.getCompetences() != null
                 && other.getCompetences() != null) {
 
@@ -265,18 +247,6 @@ public class MatchingService {
             }
         }
 
-        if (besoinSatisfied(current, other)) {
-            reasons.add("Possède la compétence recherchée : "
-                    + current.getBesoin());
-        }
-
-        if (isComplementary(current, other)) {
-            reasons.add("Profil complémentaire : "
-                    + current.getTypeProfil()
-                    + " ↔ "
-                    + other.getTypeProfil());
-        }
-
         return reasons;
     }
 
@@ -287,35 +257,33 @@ public class MatchingService {
         if (user.getSecteur() != null
                 && project.getSecteur() != null
                 && user.getSecteur()
-                        .equalsIgnoreCase(project.getSecteur())) {
+                .equalsIgnoreCase(project.getSecteur())) {
             score += 40;
         }
 
         if (user.getCompetences() != null
                 && project.getBesoin() != null
                 && user.getCompetences()
-                        .stream()
-                        .anyMatch(skill ->
-                                skill != null &&
-                                skill.equalsIgnoreCase(
-                                        project.getBesoin()
-                                ))) {
+                .stream()
+                .anyMatch(skill ->
+                        skill != null &&
+                        project.getBesoin()
+                                .toLowerCase()
+                                .contains(skill.toLowerCase()))) {
             score += 60;
         }
 
         return Math.min(score, 100);
     }
 
-    private List<String> generateProjectReasons(
-            User user,
-            Project project) {
+    private List<String> generateProjectReasons(User user, Project project) {
 
         List<String> reasons = new ArrayList<>();
 
         if (user.getSecteur() != null
                 && project.getSecteur() != null
                 && user.getSecteur()
-                        .equalsIgnoreCase(project.getSecteur())) {
+                .equalsIgnoreCase(project.getSecteur())) {
 
             reasons.add("Même secteur : " + project.getSecteur());
         }
@@ -323,22 +291,21 @@ public class MatchingService {
         if (user.getCompetences() != null
                 && project.getBesoin() != null
                 && user.getCompetences()
-                        .stream()
-                        .anyMatch(skill ->
-                                skill != null &&
-                                skill.equalsIgnoreCase(
-                                        project.getBesoin()
-                                ))) {
+                .stream()
+                .anyMatch(skill ->
+                        skill != null &&
+                        project.getBesoin()
+                                .toLowerCase()
+                                .contains(skill.toLowerCase()))) {
 
-            reasons.add("Le projet recherche : "
+            reasons.add("Vos compétences correspondent au besoin du projet : "
                     + project.getBesoin());
         }
 
         return reasons;
     }
 
-    public List<ProjectMatchResult> findProjectMatches(
-            String firebaseUid) {
+    public List<ProjectMatchResult> findProjectMatches(String firebaseUid) {
 
         User currentUser = userRepository
                 .findByFirebaseUid(firebaseUid)
@@ -354,8 +321,7 @@ public class MatchingService {
         for (Project project : projects) {
 
             int score = calculateProjectScore(currentUser, project);
-            List<String> reasons =
-                    generateProjectReasons(currentUser, project);
+            List<String> reasons = generateProjectReasons(currentUser, project);
 
             results.add(
                     new ProjectMatchResult(
@@ -376,8 +342,8 @@ public class MatchingService {
 
         return findMatches(firebaseUid)
                 .stream()
-                .filter(match -> match.getScore() >= 50)
-                .limit(3)
+                .filter(match -> match.getScore() >= 40)
+                .limit(5)
                 .toList();
     }
 }
