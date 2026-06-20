@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>ConnectEntrepreneurs Backoffice</title>
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <main class="layout">
+    <section class="card" id="authCard">
+      <h1>Backoffice Admin</h1>
+      <p>Connecte-toi avec un compte admin Firebase.</p>
+      <input id="email" type="email" placeholder="Email admin" />
+      <input id="password" type="password" placeholder="Mot de passe" />
+      <button id="loginBtn">Se connecter</button>
+      <p id="authError" class="error"></p>
+    </section>
+
+    <section class="card hidden" id="adminCard">
+      <div class="toolbar">
+        <h2>Gestion Utilisateurs</h2>
+        <div class="actions">
+          <button id="refreshBtn">Actualiser</button>
+          <button id="logoutBtn" class="danger">Se deconnecter</button>
+        </div>
+      </div>
+      <p class="muted">Validation profil: complet = nom, secteur, competences, besoin, ville.</p>
+      <div id="loading" class="muted">Chargement...</div>
+      <table id="usersTable">
+        <thead>
+          <tr>
+            <th>Nom</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actif</th>
+            <th>Profil</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </section>
+  </main>
+
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
