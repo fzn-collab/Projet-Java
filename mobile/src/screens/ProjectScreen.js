@@ -1,10 +1,12 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    FlatList,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
 import ProjectCard from "../components/ProjectCard";
@@ -13,88 +15,116 @@ import { searchProjects } from "../services/apiService";
 export default function ProjectScreen({ navigation }) {
   const [query, setQuery] = useState("");
   const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(false);
 
-  async function handleSearch() {
-    const data = await searchProjects({
-      secteur: query,
-      besoin: query,
-    });
+  useEffect(() => {
+    handleSearch("");
+  }, []);
 
-    setProjects(data);
+  async function handleSearch(value = query) {
+    try {
+      setLoading(true);
+
+      const data = await searchProjects({
+        besoin: value.trim(),
+      });
+
+      console.log("PROJECTS:", data);
+      setProjects(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.log("PROJECT SEARCH ERROR:", error);
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "#fff",
-        padding: 20,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 34,
-          fontWeight: "bold",
-          color: "#2F4157",
-          marginBottom: 25,
-        }}
-      >
-        Projects
-      </Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Projects</Text>
+      </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          marginBottom: 20,
-        }}
-      >
+      <View style={styles.searchBox}>
         <TextInput
-          placeholder="Sector or Need"
+          placeholder="Search by need, e.g. Java..."
           value={query}
           onChangeText={setQuery}
-          style={{
-            flex: 1,
-            backgroundColor: "#C7D9E5",
-            borderRadius: 25,
-            paddingHorizontal: 20,
-            height: 50,
-          }}
+          style={styles.input}
         />
 
-        <TouchableOpacity
-          onPress={handleSearch}
-          style={{
-            marginLeft: 10,
-            backgroundColor: "#F4EFEB",
-            borderRadius: 20,
-            paddingHorizontal: 20,
-            justifyContent: "center",
-
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.15,
-            shadowRadius: 3,
-            elevation: 4,
-          }}
-        >
-          <Text>Search</Text>
+        <TouchableOpacity onPress={() => handleSearch()} style={styles.button}>
+          <Text style={styles.buttonText}>🔍</Text>
         </TouchableOpacity>
       </View>
 
-      <FlatList
-        data={projects}
-        keyExtractor={(item) => item.id || item._id}
-        renderItem={({ item }) => (
-          <ProjectCard
-            project={item}
-            onPress={(project) =>
-              navigation.navigate("ProjetDetails", {
-                project,
-              })
-            }
-          />
-        )}
-      />
+      <Text style={styles.sectionTitle}>Projects List ({projects.length})</Text>
+
+      {loading ? (
+        <ActivityIndicator size="large" color="#0D47A1" />
+      ) : (
+        <FlatList
+          contentContainerStyle={styles.list}
+          data={projects}
+          keyExtractor={(item) => item.id || item._id}
+          renderItem={({ item }) => (
+            <ProjectCard
+              project={item}
+              onPress={(project) =>
+                navigation.navigate("ProjetDetails", { project })
+              }
+            />
+          )}
+          ListEmptyComponent={
+            <Text style={styles.empty}>No projects found.</Text>
+          }
+        />
+      )}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
+    backgroundColor: "#0D47A1",
+  },
+  title: { color: "#fff", fontSize: 22, fontWeight: "bold" },
+  searchBox: {
+    flexDirection: "row",
+    margin: 18,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  input: { flex: 1, height: 48, fontSize: 14 },
+  button: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E3F2FD",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  buttonText: { fontSize: 20 },
+  sectionTitle: {
+    marginHorizontal: 18,
+    marginBottom: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#0D47A1",
+  },
+  list: { paddingHorizontal: 18, paddingBottom: 20 },
+  empty: {
+    textAlign: "center",
+    marginTop: 30,
+    color: "#607D8B",
+  },
+});

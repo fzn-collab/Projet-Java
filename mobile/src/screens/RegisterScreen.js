@@ -1,12 +1,11 @@
-import axios from "axios";
 import { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
 } from "react-native";
 import { registerUser } from "../services/authService";
 
@@ -14,31 +13,67 @@ export default function RegisterScreen({ navigation }) {
   const [nom, setNom] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  const [typeProfil, setTypeProfil] = useState("");
   const [secteur, setSecteur] = useState("");
   const [competences, setCompetences] = useState("");
   const [besoin, setBesoin] = useState("");
+  const [ville, setVille] = useState("");
+  const [pays, setPays] = useState("");
 
   const handleRegister = async () => {
-    try {
-      const userCredential = await registerUser(email, password);
-      const token = await userCredential.user.getIdToken();
+    if (
+      !nom.trim() ||
+      !email.trim() ||
+      !password.trim() ||
+      !typeProfil.trim() ||
+      !secteur.trim() ||
+      !competences.trim() ||
+      !besoin.trim() ||
+      !ville.trim() ||
+      !pays.trim()
+    ) {
+      Alert.alert("Erreur", "Veuillez remplir tous les champs.");
+      return;
+    }
 
-      await axios.post(
-        "http://10.0.2.2:8080/api/users/register",
+    try {
+      const userCredential = await registerUser(email.trim(), password);
+      const firebaseUid = userCredential.user.uid;
+
+      const response = await fetch(
+        "http://192.168.0.105:8083/api/users/register",
         {
-          nom,
-          email,
-          secteur,
-          competences: competences.split(",").map((c) => c.trim()),
-          besoin,
-          firebaseUid: userCredential.user.uid,
-        },
-        {
-          headers: { Authorization: `Bearer ${token}` },
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            nom: nom.trim(),
+            email: email.trim(),
+            firebaseUid,
+            typeProfil: typeProfil.trim().toUpperCase(),
+            secteur: secteur.trim(),
+            competences: competences.split(",").map((c) => c.trim()),
+            besoin: besoin.trim(),
+            localisation: {
+              ville: ville.trim(),
+              pays: pays.trim(),
+            },
+          }),
         },
       );
 
-      navigation.replace("Home");
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error("Erreur backend : utilisateur non enregistré.");
+      }
+
+      console.log("USER CREATED:", data);
+
+      Alert.alert("Succès", "Compte créé avec succès !");
+      navigation.replace("Login");
     } catch (error) {
       Alert.alert("Erreur", error.message);
     }
@@ -75,23 +110,44 @@ export default function RegisterScreen({ navigation }) {
 
       <TextInput
         style={styles.input}
-        placeholder="Secteur (ex: FinTech, EdTech...)"
+        placeholder="Type profil : DEVELOPPEUR, INVESTISSEUR..."
+        value={typeProfil}
+        onChangeText={setTypeProfil}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Secteur : FinTech, EdTech..."
         value={secteur}
         onChangeText={setSecteur}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Compétences (séparées par virgule)"
+        placeholder="Compétences : Java, React, Marketing..."
         value={competences}
         onChangeText={setCompetences}
       />
 
       <TextInput
         style={styles.input}
-        placeholder="Besoin (co-fondateur, investisseur...)"
+        placeholder="Besoin : Projet, Développeur, Investisseur..."
         value={besoin}
         onChangeText={setBesoin}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Ville"
+        value={ville}
+        onChangeText={setVille}
+      />
+
+      <TextInput
+        style={styles.input}
+        placeholder="Pays"
+        value={pays}
+        onChangeText={setPays}
       />
 
       <TouchableOpacity style={styles.btn} onPress={handleRegister}>

@@ -1,11 +1,11 @@
 import { useState } from "react";
 import {
-    Alert,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import { loginUser } from "../services/authService";
 
@@ -16,7 +16,7 @@ export default function LoginScreen({ navigation }) {
   const handleLogin = async () => {
     try {
       await loginUser(email, password);
-      navigation.replace("Home");
+      navigation.replace("MainApp");
     } catch (error) {
       Alert.alert("Erreur", error.message);
     }

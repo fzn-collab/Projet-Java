@@ -1,37 +1,44 @@
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
+    ActivityIndicator,
+    Alert,
+    ScrollView,
+    StyleSheet,
+    Text,
+    TouchableOpacity,
+    View,
 } from "react-native";
-import { getUser } from "../services/apiService";
+import { getMyProfile } from "../services/apiService";
+import { auth } from "../services/authService";
 
-export default function ProfileScreen({ route, navigation }) {
-  const receivedUser = route.params?.user;
-  const userId = receivedUser?.userId || receivedUser?.id;
-
-  const [user, setUser] = useState(receivedUser || null);
-  const [loading, setLoading] = useState(false);
+export default function MyProfileScreen({ navigation }) {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (userId) {
-      loadUser();
-    }
-  }, [userId]);
+    const unsubscribe = navigation.addListener("focus", loadProfile);
+    return unsubscribe;
+  }, [navigation]);
 
-  async function loadUser() {
+  async function loadProfile() {
     try {
       setLoading(true);
-      const data = await getUser(userId);
-      console.log("USER DETAILS:", data);
+      const data = await getMyProfile();
+      console.log("MY PROFILE:", data);
       setUser(data);
     } catch (error) {
-      console.log("GET USER ERROR:", error);
+      console.log("MY PROFILE ERROR:", error);
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function handleLogout() {
+    try {
+      await auth.signOut();
+      navigation.getParent()?.getParent()?.replace("Login");
+    } catch (error) {
+      Alert.alert("Erreur", "Impossible de se déconnecter.");
     }
   }
 
@@ -46,7 +53,7 @@ export default function ProfileScreen({ route, navigation }) {
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Aucun utilisateur sélectionné</Text>
+        <Text>Aucun profil trouvé</Text>
       </View>
     );
   }
@@ -54,25 +61,20 @@ export default function ProfileScreen({ route, navigation }) {
   return (
     <View style={styles.container}>
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>User Profile</Text>
+        <Text style={styles.headerTitle}>My Profile</Text>
       </View>
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.avatar}>
-          <Text style={styles.avatarText}>
-            {(user.nom || user.name || "U").charAt(0)}
-          </Text>
+          <Text style={styles.avatarText}>{user.nom?.charAt(0) || "U"}</Text>
         </View>
 
-        <Text style={styles.name}>{user.nom || user.name}</Text>
+        <Text style={styles.name}>{user.nom}</Text>
         <Text style={styles.sub}>{user.typeProfil || "Entrepreneur"}</Text>
 
         <View style={styles.card}>
-          <Text style={styles.sectionTitle}>Information</Text>
+          <Text style={styles.sectionTitle}>Informations</Text>
+          <Text style={styles.info}>Email : {user.email}</Text>
           <Text style={styles.info}>Secteur : {user.secteur}</Text>
           <Text style={styles.info}>Besoin : {user.besoin}</Text>
           <Text style={styles.info}>Ville : {user.localisation?.ville}</Text>
@@ -90,8 +92,15 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton}>
-          <Text style={styles.primaryText}>Connect</Text>
+        <TouchableOpacity
+          style={styles.editButton}
+          onPress={() => navigation.navigate("EditProfile", { user })}
+        >
+          <Text style={styles.buttonText}>Modifier mon profil</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+          <Text style={styles.buttonText}>Se déconnecter</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -101,25 +110,14 @@ export default function ProfileScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: "#F8FAFC" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
   header: {
     paddingTop: 60,
     paddingHorizontal: 20,
-    paddingBottom: 18,
+    paddingBottom: 22,
     backgroundColor: "#0D47A1",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
   },
-
-  back: { color: "#fff", fontSize: 34 },
-  headerTitle: { color: "#fff", fontSize: 22, fontWeight: "bold" },
-
-  content: {
-    padding: 20,
-    alignItems: "center",
-  },
-
+  headerTitle: { color: "#fff", fontSize: 24, fontWeight: "bold" },
+  content: { padding: 20, alignItems: "center" },
   avatar: {
     width: 90,
     height: 90,
@@ -129,25 +127,9 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginBottom: 12,
   },
-
-  avatarText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#0D47A1",
-  },
-
-  name: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0D47A1",
-  },
-
-  sub: {
-    color: "#607D8B",
-    marginTop: 4,
-    marginBottom: 20,
-  },
-
+  avatarText: { fontSize: 36, fontWeight: "bold", color: "#0D47A1" },
+  name: { fontSize: 24, fontWeight: "bold", color: "#0D47A1" },
+  sub: { color: "#607D8B", marginTop: 4, marginBottom: 20 },
   card: {
     width: "100%",
     backgroundColor: "#fff",
@@ -159,25 +141,14 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
-
   sectionTitle: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#0D47A1",
     marginBottom: 10,
   },
-
-  info: {
-    color: "#455A64",
-    marginBottom: 7,
-  },
-
-  badges: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-  },
-
+  info: { color: "#455A64", marginBottom: 7 },
+  badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
   badge: {
     backgroundColor: "#E3F2FD",
     color: "#0D47A1",
@@ -187,18 +158,21 @@ const styles = StyleSheet.create({
     fontSize: 12,
     fontWeight: "600",
   },
-
-  primaryButton: {
+  editButton: {
     width: "100%",
     backgroundColor: "#0D47A1",
     padding: 15,
     borderRadius: 14,
     alignItems: "center",
-    marginTop: 8,
+    marginTop: 10,
   },
-
-  primaryText: {
-    color: "#fff",
-    fontWeight: "bold",
+  logoutButton: {
+    width: "100%",
+    backgroundColor: "#EF5350",
+    padding: 15,
+    borderRadius: 14,
+    alignItems: "center",
+    marginTop: 10,
   },
+  buttonText: { color: "#fff", fontWeight: "bold" },
 });

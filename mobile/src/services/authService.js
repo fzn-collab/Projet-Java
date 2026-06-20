@@ -1,13 +1,10 @@
 import { initializeApp } from "firebase/app";
 import {
-    createUserWithEmailAndPassword,
-    getAuth,
-    GoogleAuthProvider,
-    sendPasswordResetEmail,
-    signInWithEmailAndPassword,
-    signInWithPopup,
+  createUserWithEmailAndPassword,
+  getAuth,
+  sendPasswordResetEmail,
+  signInWithEmailAndPassword,
 } from "firebase/auth";
-import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDa_aPiNQpV8H-J1vd12K9zlYu0JlrnbQA",
@@ -19,16 +16,13 @@ const firebaseConfig = {
 };
 
 const app = initializeApp(firebaseConfig);
+
 export const auth = getAuth(app);
-export const storage = getStorage(app);
 
 export const registerUser = (email, password) =>
   createUserWithEmailAndPassword(auth, email, password);
 
 export const loginUser = (email, password) =>
   signInWithEmailAndPassword(auth, email, password);
-
-export const loginWithGoogle = () =>
-  signInWithPopup(auth, new GoogleAuthProvider());
 
 export const resetPassword = (email) => sendPasswordResetEmail(auth, email);

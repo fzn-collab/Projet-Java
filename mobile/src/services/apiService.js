@@ -1,9 +1,14 @@
-const API_URL = "http://192.168.0.115:8083";
+import axios from "axios";
+import { auth } from "./authService";
 
-export async function getSuggestions(firebaseUid) {
+const API_URL = "http://192.168.0.105:8083";
+
+export async function getSuggestions() {
+  const uid = auth.currentUser?.uid;
+
   const response = await fetch(`${API_URL}/api/matching/suggestions`, {
     headers: {
-      "X-User-Id": firebaseUid,
+      "X-User-Id": uid,
     },
   });
 
@@ -11,7 +16,13 @@ export async function getSuggestions(firebaseUid) {
 }
 
 export async function getMatches() {
-  const response = await fetch(`${API_URL}/api/matching`);
+  const uid = auth.currentUser?.uid;
+
+  const response = await fetch(`${API_URL}/api/matching`, {
+    headers: {
+      "X-User-Id": uid,
+    },
+  });
 
   return response.json();
 }
@@ -45,12 +56,61 @@ export async function searchProjects(filters) {
 }
 
 export async function getProjectMatches() {
-  const response = await fetch(`${API_URL}/api/matching/projects`);
+  const uid = auth.currentUser?.uid;
+
+  const response = await fetch(`${API_URL}/api/matching/projects`, {
+    headers: {
+      "X-User-Id": uid,
+    },
+  });
 
   return response.json();
 }
 export async function getUser(id) {
   const response = await fetch(`${API_URL}/api/users/${id}`);
+
+  return response.json();
+}
+
+export async function getProfileCompletion() {
+  const uid = auth.currentUser?.uid;
+
+  const response = await fetch(`${API_URL}/api/users/me/completion`, {
+    headers: {
+      "X-User-Id": uid,
+    },
+  });
+
+  return response.json();
+}
+
+export async function updateMyProfile(profile) {
+  const uid = auth.currentUser?.uid;
+
+  console.log("UID:", uid);
+  console.log("URL UPDATE:", `${API_URL}/api/users/me`);
+  console.log("PROFILE:", profile);
+
+  const response = await axios.put(`${API_URL}/api/users/me`, profile, {
+    headers: {
+      "Content-Type": "application/json",
+      "X-User-Id": uid,
+    },
+  });
+
+  console.log("UPDATE RESPONSE:", response.data);
+
+  return response.data;
+}
+
+export async function getMyProfile() {
+  const uid = auth.currentUser?.uid;
+
+  const response = await fetch(`${API_URL}/api/users/me`, {
+    headers: {
+      "X-User-Id": uid,
+    },
+  });
 
   return response.json();
 }

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import {
   FlatList,
+  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -15,73 +16,33 @@ export default function SearchScreen({ navigation }) {
   const [results, setResults] = useState([]);
 
   async function handleSearch() {
-    try {
-      const data = await searchUsers({ skill });
-      setResults(data);
-    } catch (error) {
-      console.log(error);
-    }
+    const data = await searchUsers({ skill });
+    setResults(data);
   }
 
   return (
-    <View
-      style={{
-        flex: 1,
-        backgroundColor: "#fff",
-        padding: 20,
-      }}
-    >
-      <Text
-        style={{
-          fontSize: 34,
-          fontWeight: "bold",
-          color: "#2F4157",
-          marginBottom: 25,
-        }}
-      >
-        Search
-      </Text>
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Search Users</Text>
+      </View>
 
-      <View
-        style={{
-          flexDirection: "row",
-          marginBottom: 20,
-        }}
-      >
+      <View style={styles.searchBox}>
         <TextInput
-          placeholder="Skill"
+          placeholder="Search by skill, need or sector..."
           value={skill}
           onChangeText={setSkill}
-          style={{
-            flex: 1,
-            backgroundColor: "#C7D9E5",
-            borderRadius: 25,
-            paddingHorizontal: 20,
-            height: 50,
-          }}
+          style={styles.input}
         />
 
-        <TouchableOpacity
-          onPress={handleSearch}
-          style={{
-            marginLeft: 10,
-            backgroundColor: "#F4EFEB",
-            borderRadius: 20,
-            paddingHorizontal: 20,
-            justifyContent: "center",
-
-            shadowColor: "#000",
-            shadowOffset: { width: 0, height: 3 },
-            shadowOpacity: 0.15,
-            shadowRadius: 3,
-            elevation: 4,
-          }}
-        >
-          <Text>Search</Text>
+        <TouchableOpacity onPress={handleSearch} style={styles.filterButton}>
+          <Text style={styles.filterText}>🔍</Text>
         </TouchableOpacity>
       </View>
 
+      <Text style={styles.sectionTitle}>Results ({results.length})</Text>
+
       <FlatList
+        contentContainerStyle={styles.list}
         data={results}
         keyExtractor={(item) => item.id}
         renderItem={({ item }) => (
@@ -94,3 +55,56 @@ export default function SearchScreen({ navigation }) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: "#F8FAFC" },
+
+  header: {
+    paddingTop: 60,
+    paddingHorizontal: 20,
+    paddingBottom: 18,
+    backgroundColor: "#0D47A1",
+  },
+
+  title: { color: "#fff", fontSize: 22, fontWeight: "bold" },
+
+  searchBox: {
+    flexDirection: "row",
+    margin: 18,
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    paddingHorizontal: 12,
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+
+  input: {
+    flex: 1,
+    height: 48,
+    fontSize: 14,
+  },
+
+  filterButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: "#E3F2FD",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+
+  filterText: { fontSize: 20 },
+
+  sectionTitle: {
+    marginHorizontal: 18,
+    marginBottom: 10,
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#0D47A1",
+  },
+
+  list: { paddingHorizontal: 18, paddingBottom: 20 },
+});

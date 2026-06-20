@@ -1,8 +1,15 @@
 import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 
 export default function ProjectDetailsScreen({ route, navigation }) {
-  const { project } = route.params;
+  const project = route.params?.project;
 
+  if (!project) {
+    return (
+      <View style={{ flex: 1, justifyContent: "center", alignItems: "center" }}>
+        <Text>Aucun projet sélectionné</Text>
+      </View>
+    );
+  }
   return (
     <View
       style={{
