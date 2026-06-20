@@ -48,7 +48,7 @@ class MatchingServiceTest {
     }
 
     private User buildUser(String id, String nom, String secteur, List<String> competences,
-                            String besoin, String typeProfil, String ville, String pays) {
+                           String besoin, String typeProfil, String ville, String pays) {
         User u = new User();
         u.setId(id);
         u.setNom(nom);
@@ -90,7 +90,22 @@ class MatchingServiceTest {
     }
 
     @Test
+    void testFindMatches_ScoreZero_NotIncluded() {
+        // Aucun critère commun → score = 0 → non inclus dans les résultats
+        User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
+        User other = buildUser("2", "Sara", "HealthTech", null, null, null, null, null);
+
+        when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
+        when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
+
+        List<MatchResult> result = matchingService.findMatches("uid1");
+
+        assertTrue(result.isEmpty());
+    }
+
+    @Test
     void testFindMatches_SameSecteur_AddsScore() {
+        // sameSecteur → +20
         User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
         User other = buildUser("2", "Sara", "FinTech", null, null, null, null, null);
 
@@ -100,12 +115,13 @@ class MatchingServiceTest {
         List<MatchResult> result = matchingService.findMatches("uid1");
 
         assertEquals(1, result.size());
-        assertEquals(25, result.get(0).getScore());
+        assertEquals(20, result.get(0).getScore());
         assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("Même secteur")));
     }
 
     @Test
     void testFindMatches_SameVilleAndPays_AddsScore() {
+        // sameVille → +10, samePays → +5 = 15
         User current = buildUser("1", "Ahmed", null, null, null, null, "Marrakech", "Maroc");
         User other = buildUser("2", "Sara", null, null, null, null, "Marrakech", "Maroc");
 
@@ -114,11 +130,12 @@ class MatchingServiceTest {
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(15, result.get(0).getScore()); // 10 ville + 5 pays
+        assertEquals(15, result.get(0).getScore());
     }
 
     @Test
     void testFindMatches_CommonSkills_AddsScore() {
+        // 1 compétence commune sur 2 = 50% * 20 = 10
         User current = buildUser("1", "Ahmed", null, Arrays.asList("Java", "React"), null, null, null, null);
         User other = buildUser("2", "Sara", null, Arrays.asList("Java", "Python"), null, null, null, null);
 
@@ -127,14 +144,15 @@ class MatchingServiceTest {
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        // 1 compétence commune sur 2 = 50% * 30 = 15
-        assertEquals(15, result.get(0).getScore());
+        assertEquals(10, result.get(0).getScore());
         assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("Compétence commune")));
     }
 
     @Test
-    void testFindMatches_BesoinSatisfied_AddsScore() {
-        User current = buildUser("1", "Ahmed", null, null, "Marketing", null, null, null);
+    void testFindMatches_OtherCanHelpCurrent_AddsScore() {
+        // otherCanHelpCurrent → +30
+        // besoin de current contient une compétence de other
+        User current = buildUser("1", "Ahmed", null, null, "besoin Marketing", null, null, null);
         User other = buildUser("2", "Sara", null, Arrays.asList("Marketing", "SEO"), null, null, null, null);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
@@ -142,76 +160,48 @@ class MatchingServiceTest {
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
+        assertEquals(30, result.get(0).getScore());
+        assertTrue(result.get(0).getReasons().stream()
+                .anyMatch(r -> r.contains("peut répondre à votre besoin")));
+    }
+
+    @Test
+    void testFindMatches_CurrentCanHelpOther_AddsScore() {
+        // currentCanHelpOther → +20
+        // besoin de other contient une compétence de current
+        User current = buildUser("1", "Ahmed", null, Arrays.asList("Java"), null, null, null, null);
+        User other = buildUser("2", "Sara", null, null, "besoin Java", null, null, null);
+
+        when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
+        when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
+
+        List<MatchResult> result = matchingService.findMatches("uid1");
+
         assertEquals(20, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("compétence recherchée")));
+        assertTrue(result.get(0).getReasons().stream()
+                .anyMatch(r -> r.contains("Vous pouvez répondre au besoin")));
     }
 
     @Test
-    void testFindMatches_ComplementaryProfiles_PorteurProjet() {
-        // Les deux typeProfil non-null requis par isComplementary()
-        User current = buildUser("1", "Ahmed", null, null, null, "PORTEUR_PROJET", null, null);
-        User other = buildUser("2", "Sara", null, null, "Recherche projet", "INVESTISSEUR", null, null);
+    void testFindMatches_BothBesoinsSatisfied_AddsScore() {
+        // otherCanHelpCurrent (+30) + currentCanHelpOther (+20) = 50
+        User current = buildUser("1", "Ahmed", null, Arrays.asList("Java"), "besoin Marketing", null, null, null);
+        User other = buildUser("2", "Sara", null, Arrays.asList("Marketing"), "besoin Java", null, null, null);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(10, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("complémentaire")));
-    }
-
-    @Test
-    void testFindMatches_ComplementaryProfiles_Developpeur() {
-        // Les deux typeProfil non-null requis par isComplementary()
-        User current = buildUser("1", "Ahmed", null, null, null, "DEVELOPPEUR", null, null);
-        User other = buildUser("2", "Sara", null, null, "recherche un développeur urgent", "INVESTISSEUR", null, null);
-
-        when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
-        when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
-
-        List<MatchResult> result = matchingService.findMatches("uid1");
-
-        assertEquals(10, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("complémentaire")));
-    }
-
-    @Test
-    void testFindMatches_ComplementaryProfiles_Investisseur() {
-        // Les deux typeProfil non-null requis par isComplementary()
-        User current = buildUser("1", "Ahmed", null, null, null, "INVESTISSEUR", null, null);
-        User other = buildUser("2", "Sara", null, null, "cherche investisseur", "DEVELOPPEUR", null, null);
-
-        when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
-        when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
-
-        List<MatchResult> result = matchingService.findMatches("uid1");
-
-        assertEquals(10, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("complémentaire")));
-    }
-
-    @Test
-    void testFindMatches_ComplementaryProfiles_OtherIsPorteurProjet() {
-        // Les deux typeProfil non-null requis par isComplementary()
-        User current = buildUser("1", "Ahmed", null, null, "Recherche un projet", "DEVELOPPEUR", null, null);
-        User other = buildUser("2", "Sara", null, null, null, "PORTEUR_PROJET", null, null);
-
-        when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
-        when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
-
-        List<MatchResult> result = matchingService.findMatches("uid1");
-
-        assertEquals(10, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("complémentaire")));
+        assertEquals(50, result.get(0).getScore());
     }
 
     @Test
     void testFindMatches_MaxScoreCappedAt100() {
         User current = buildUser("1", "Ahmed", "FinTech", Arrays.asList("Java", "React"),
-                "Marketing", "PORTEUR_PROJET", "Marrakech", "Maroc");
+                "besoin Marketing", null, "Marrakech", "Maroc");
         User other = buildUser("2", "Sara", "FinTech", Arrays.asList("Java", "React", "Marketing"),
-                "Recherche projet", null, "Marrakech", "Maroc");
+                "besoin Java", null, "Marrakech", "Maroc");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
@@ -224,24 +214,35 @@ class MatchingServiceTest {
     @Test
     void testFindMatches_SortedByScoreDescending() {
         User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
-        User lowMatch = buildUser("2", "Sara", "HealthTech", null, null, null, null, null);
+        User lowMatch = buildUser("2", "Sara", null, null, null, null, "Marrakech", "Maroc");
         User highMatch = buildUser("3", "Karim", "FinTech", null, null, null, null, null);
+
+        // lowMatch score=15 (ville+pays), highMatch score=20 (secteur)
+        User.Location loc = new User.Location();
+        loc.setVille("Marrakech");
+        loc.setPays("Maroc");
+        lowMatch.setLocalisation(loc);
+
+        User.Location loc2 = new User.Location();
+        loc2.setVille("Marrakech");
+        loc2.setPays("Maroc");
+        current.setLocalisation(loc2);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, lowMatch, highMatch));
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(2, result.size());
         assertEquals("Karim", result.get(0).getName());
     }
 
     @Test
     void testFindMatches_MatchLevel_Excellent() {
+        // secteur(20) + otherCanHelp(30) + currentCanHelp(20) + skills = >= 80
         User current = buildUser("1", "Ahmed", "FinTech", Arrays.asList("Java"),
-                "Java", "PORTEUR_PROJET", "Marrakech", "Maroc");
-        User other = buildUser("2", "Sara", "FinTech", Arrays.asList("Java"),
-                "recherche projet", null, "Marrakech", "Maroc");
+                "besoin Marketing", null, "Marrakech", "Maroc");
+        User other = buildUser("2", "Sara", "FinTech", Arrays.asList("Marketing"),
+                "besoin Java", null, "Marrakech", "Maroc");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
@@ -253,43 +254,50 @@ class MatchingServiceTest {
     }
 
     @Test
-    void testFindMatches_MatchLevel_Faible() {
-        User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
-        User other = buildUser("2", "Sara", "HealthTech", null, null, null, null, null);
+    void testFindMatches_MatchLevel_Moyen() {
+        // secteur(20) + ville(10) + pays(5) = 35 → non, on met secteur+ville = 30 → Faible
+        // Pour Moyen >= 40 : secteur(20) + otherCanHelp(30) = 50 → Bon
+        // Moyen = 40-59 : secteur(20) + ville(10) + pays(5) + skills(10) = 45
+        User current = buildUser("1", "Ahmed", "FinTech",
+                Arrays.asList("Java", "React"), null, null, "Marrakech", "Maroc");
+        User other = buildUser("2", "Sara", "FinTech",
+                Arrays.asList("Java", "Python"), null, null, "Marrakech", "Maroc");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(0, result.get(0).getScore());
-        assertEquals("Faible", result.get(0).getMatchLevel());
+        // secteur(20) + ville(10) + pays(5) + skills(10) = 45
+        assertEquals(45, result.get(0).getScore());
+        assertEquals("Moyen", result.get(0).getMatchLevel());
     }
 
     @Test
     void testFindMatches_NullCompetences_NoSkillScore() {
-        User current = buildUser("1", "Ahmed", null, null, null, null, null, null);
-        User other = buildUser("2", "Sara", null, Arrays.asList("Java"), null, null, null, null);
+        User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
+        User other = buildUser("2", "Sara", "FinTech", Arrays.asList("Java"), null, null, null, null);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(0, result.get(0).getScore());
+        // secteur(20) + skills(0) = 20
+        assertEquals(20, result.get(0).getScore());
     }
 
     @Test
     void testFindMatches_EmptyCompetences_NoSkillScore() {
-        User current = buildUser("1", "Ahmed", null, Collections.emptyList(), null, null, null, null);
-        User other = buildUser("2", "Sara", null, Arrays.asList("Java"), null, null, null, null);
+        User current = buildUser("1", "Ahmed", "FinTech", Collections.emptyList(), null, null, null, null);
+        User other = buildUser("2", "Sara", "FinTech", Arrays.asList("Java"), null, null, null, null);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
 
         List<MatchResult> result = matchingService.findMatches("uid1");
 
-        assertEquals(0, result.get(0).getScore());
+        assertEquals(20, result.get(0).getScore());
     }
 
     // ---------- findProjectMatches ----------
@@ -324,12 +332,13 @@ class MatchingServiceTest {
 
     @Test
     void testFindProjectMatches_SkillMatchesBesoin() {
+        // besoin du projet contient la compétence → contains → +60
         User current = buildUser("1", "Ahmed", null, Arrays.asList("Marketing"), null, null, null, null);
 
         Project project = new Project();
         project.setId("p1");
         project.setTitre("SaaS RH");
-        project.setBesoin("Marketing");
+        project.setBesoin("besoin Marketing urgent");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(projectRepository.findAll()).thenReturn(List.of(project));
@@ -337,7 +346,8 @@ class MatchingServiceTest {
         List<ProjectMatchResult> result = matchingService.findProjectMatches("uid1");
 
         assertEquals(60, result.get(0).getScore());
-        assertTrue(result.get(0).getReasons().stream().anyMatch(r -> r.contains("recherche")));
+        assertTrue(result.get(0).getReasons().stream()
+                .anyMatch(r -> r.contains("correspondent au besoin")));
     }
 
     @Test
@@ -347,7 +357,7 @@ class MatchingServiceTest {
         Project project = new Project();
         project.setId("p1");
         project.setSecteur("FinTech");
-        project.setBesoin("Marketing");
+        project.setBesoin("besoin Marketing");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(projectRepository.findAll()).thenReturn(List.of(project));
@@ -363,7 +373,7 @@ class MatchingServiceTest {
 
         Project project = new Project();
         project.setSecteur("HealthTech");
-        project.setBesoin("Marketing");
+        project.setBesoin("besoin Marketing");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(projectRepository.findAll()).thenReturn(List.of(project));
@@ -386,7 +396,7 @@ class MatchingServiceTest {
         highScore.setId("p2");
         highScore.setTitre("High");
         highScore.setSecteur("FinTech");
-        highScore.setBesoin("Marketing");
+        highScore.setBesoin("besoin Marketing");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(projectRepository.findAll()).thenReturn(Arrays.asList(lowScore, highScore));
@@ -399,23 +409,31 @@ class MatchingServiceTest {
     // ---------- getSuggestions ----------
 
     @Test
-    void testGetSuggestions_FiltersScoreAbove50() {
-        User current = buildUser("1", "Ahmed", "FinTech", Arrays.asList("Java"), null, null, null, null);
-        User highMatch = buildUser("2", "Sara", "FinTech", Arrays.asList("Java"),
-                "Java", "PORTEUR_PROJET", "Marrakech", "Maroc");
-        User lowMatch = buildUser("3", "Karim", "HealthTech", null, null, null, null, null);
+    void testGetSuggestions_FiltersScoreAbove40() {
+        // getSuggestions filtre >= 40
+        User current = buildUser("1", "Ahmed", "FinTech", Arrays.asList("Java"),
+                "besoin Marketing", null, null, null);
+        User highMatch = buildUser("2", "Sara", "FinTech", Arrays.asList("Marketing"),
+                "besoin Java", null, null, null);
+        User lowMatch = buildUser("3", "Karim", null, null, null, null, "Marrakech", "Maroc");
+
+        User.Location loc = new User.Location();
+        loc.setVille("Marrakech");
+        loc.setPays("Maroc");
+        current.setLocalisation(null); // pas de localisation pour current
+        lowMatch.setLocalisation(loc);
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, highMatch, lowMatch));
 
         List<MatchResult> result = matchingService.getSuggestions("uid1");
 
-        assertTrue(result.stream().allMatch(m -> m.getScore() >= 50));
+        assertTrue(result.stream().allMatch(m -> m.getScore() >= 40));
         assertFalse(result.isEmpty());
     }
 
     @Test
-    void testGetSuggestions_LimitedToThree() {
+    void testGetSuggestions_LimitedToFive() {
         User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
 
         List<User> allUsers = Arrays.asList(
@@ -423,7 +441,9 @@ class MatchingServiceTest {
                 buildUser("2", "U2", "FinTech", null, null, null, null, null),
                 buildUser("3", "U3", "FinTech", null, null, null, null, null),
                 buildUser("4", "U4", "FinTech", null, null, null, null, null),
-                buildUser("5", "U5", "FinTech", null, null, null, null, null)
+                buildUser("5", "U5", "FinTech", null, null, null, null, null),
+                buildUser("6", "U6", "FinTech", null, null, null, null, null),
+                buildUser("7", "U7", "FinTech", null, null, null, null, null)
         );
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
@@ -431,13 +451,14 @@ class MatchingServiceTest {
 
         List<MatchResult> result = matchingService.getSuggestions("uid1");
 
-        assertTrue(result.size() <= 3);
+        assertTrue(result.size() <= 5);
     }
 
     @Test
-    void testGetSuggestions_NoMatchesAbove50_ReturnsEmpty() {
-        User current = buildUser("1", "Ahmed", "FinTech", null, null, null, null, null);
-        User other = buildUser("2", "Sara", "HealthTech", null, null, null, null, null);
+    void testGetSuggestions_NoMatchesAbove40_ReturnsEmpty() {
+        // score = 15 (ville+pays) < 40 → filtré
+        User current = buildUser("1", "Ahmed", null, null, null, null, "Marrakech", "Maroc");
+        User other = buildUser("2", "Sara", null, null, null, null, "Marrakech", "Maroc");
 
         when(userRepository.findByFirebaseUid("uid1")).thenReturn(Optional.of(current));
         when(userRepository.findAll()).thenReturn(Arrays.asList(current, other));
