@@ -1,0 +1,36 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mobile
+  namespace: connectentrepreneurs
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mobile
+  template:
+    metadata:
+      labels:
+        app: mobile
+    spec:
+      containers:
+      - name: mobile
+        image: connectentrepreneurs/mobile:latest
+        ports:
+        - containerPort: 19000
+        - containerPort: 19001
+        - containerPort: 19002
+        env:
+        - name: EXPO_DEVTOOLS_LISTEN_ADDRESS
+          value: "0.0.0.0"
+        - name: REACT_NATIVE_PACKAGER_HOSTNAME
+          value: "0.0.0.0"
+        - name: API_URL
+          value: http://backend:8080/api
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
