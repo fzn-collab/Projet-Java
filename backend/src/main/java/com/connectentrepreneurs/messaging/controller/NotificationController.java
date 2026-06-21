@@ -1,9 +1,12 @@
 package com.connectentrepreneurs.messaging.controller;
 
+import com.connectentrepreneurs.messaging.model.Notification;
 import com.connectentrepreneurs.messaging.service.NotificationService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 import java.util.Map;
 
 @RestController
@@ -14,31 +17,24 @@ public class NotificationController {
     @Autowired
     private NotificationService notificationService;
 
+    @GetMapping("/{userId}")
+    public List<Notification> getUserNotifications(@PathVariable String userId) {
+        return notificationService.getUserNotifications(userId);
+    }
+
     @PostMapping("/message")
-    public ResponseEntity<?> notifyNewMessage(@RequestBody Map<String, String> body) {
+    public ResponseEntity<?> notifyMessage(@RequestBody Map<String, String> body) {
         notificationService.sendNewMessageNotification(
-            body.get("receiverId"),
-            body.get("senderName"),
-            body.get("content")
+                body.get("receiverId"),
+                body.get("senderName"),
+                body.get("content")
         );
-        return ResponseEntity.ok("Notification envoyée");
+        return ResponseEntity.ok("ok");
     }
 
-    @PostMapping("/match")
-    public ResponseEntity<?> notifyMatch(@RequestBody Map<String, String> body) {
-        notificationService.sendMatchNotification(
-            body.get("userId"),
-            body.get("matchedUserName")
-        );
-        return ResponseEntity.ok("Notification match envoyée");
-    }
-
-    @PostMapping("/project")
-    public ResponseEntity<?> notifyProjectInvitation(@RequestBody Map<String, String> body) {
-        notificationService.sendProjectInvitationNotification(
-            body.get("userId"),
-            body.get("projectTitle")
-        );
-        return ResponseEntity.ok("Invitation envoyée");
+    @PutMapping("/read/{id}")
+    public ResponseEntity<?> markRead(@PathVariable String id) {
+        notificationService.markAsRead(id);
+        return ResponseEntity.ok("read");
     }
 }
