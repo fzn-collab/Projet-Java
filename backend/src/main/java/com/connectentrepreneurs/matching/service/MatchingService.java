@@ -373,7 +373,6 @@ public class MatchingService {
     }
 
     public List<MatchResult> getSuggestions(String firebaseUid) {
-
         return findMatches(firebaseUid)
                 .stream()
                 .filter(match -> match.getScore() >= 50)
