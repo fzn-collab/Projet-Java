@@ -9,11 +9,11 @@
 ConnectEntrepreneurs est une plateforme innovante qui facilite la mise en relation entre entrepreneurs, porteurs de projets et investisseurs. Notre mission est de créer un écosystème dynamique où les idées rencontrent les opportunités.
 
 ## Membres
-Marya Ziane: Gestion utilisateurs & Authentification
-Aya Hanine : Matching intelligent & Recherche
-Nokraoui Fatima Zohra: Messagerie temps réel & Notifications
-Chamlali Meryem: Gestion projets & Tableau de bord
-Mardey Zineb: Backoffice, Analytics & Deploiment avec Docker et kubernetes (non complet)
+- Marya Ziane: Gestion utilisateurs & Authentification
+- Aya Hanine : Matching intelligent & Recherche
+- Nokraoui Fatima Zohra: Messagerie temps réel & Notifications
+- Chamlali Meryem: Gestion projets & Tableau de bord
+- Mardey Zineb: Backoffice, Analytics & Deploiment avec Docker et kubernetes (non complet)
 
 ### Fonctionnalités Principales
 
