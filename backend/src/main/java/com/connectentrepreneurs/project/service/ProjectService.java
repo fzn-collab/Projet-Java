@@ -51,4 +51,18 @@ public class ProjectService {
             .filter(p -> "actif".equals(p.getStatut()))
             .count();
     }
+
+    public Project approveProject(String id) {
+        Project project = projectRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+        project.setStatut("ACTIVE");
+        return projectRepository.save(project);
+    }
+
+    public Project rejectProject(String id) {
+        Project project = projectRepository.findById(id)
+            .orElseThrow(() -> new RuntimeException("Projet non trouvé"));
+        project.setStatut("REJECTED");
+        return projectRepository.save(project);
+    }
 }

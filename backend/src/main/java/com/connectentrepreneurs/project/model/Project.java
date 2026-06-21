@@ -1,3 +1,4 @@
+
 package com.connectentrepreneurs.project.model;
 
 import org.springframework.data.annotation.Id;
@@ -43,3 +44,4 @@ public class Project {
     public List<String> getTags() { return tags; }
     public void setTags(List<String> tags) { this.tags = tags; }
 }
+

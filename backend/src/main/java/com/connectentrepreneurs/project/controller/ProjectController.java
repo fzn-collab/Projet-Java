@@ -48,4 +48,14 @@ public class ProjectController {
         projectService.deleteProject(id);
         return ResponseEntity.ok().build();
     }
+
+    @PatchMapping("/{id}/approve")
+    public ResponseEntity<Project> approveProject(@PathVariable String id) {
+        return ResponseEntity.ok(projectService.approveProject(id));
+    }
+
+    @PatchMapping("/{id}/reject")
+    public ResponseEntity<Project> rejectProject(@PathVariable String id) {
+        return ResponseEntity.ok(projectService.rejectProject(id));
+    }
 }

@@ -1,0 +1,70 @@
+# ConnectEntrepreneurs — deploiement local complet
+# Usage (depuis le dossier deployment/) :
+#   docker compose --profile full up --build
+
+services:
+  mongodb:
+    image: mongo:7
+    container_name: ce-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+    environment:
+      MONGO_INITDB_DATABASE: connectentrepreneurs
+    profiles:
+      - full
+
+  backend:
+    build:
+      context: ..
+      dockerfile: deployment/backend/Dockerfile
+    container_name: ce-backend
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    profiles:
+      - full
+
+  backoffice:
+    build:
+      context: ..
+      dockerfile: deployment/backoffice/Dockerfile
+    container_name: ce-backoffice
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    depends_on:
+      - backend
+    profiles:
+      - full
+
+  # Mobile (React Native / Expo) - Web Build Statique
+  mobile:
+    build:
+      context: ..
+      dockerfile: deployment/mobile/Dockerfile
+    container_name: ce-mobile
+    restart: unless-stopped
+    ports:
+      - "19000:80"  # Web statique via nginx
+    depends_on:
+      - backend
+    profiles:
+      - full
+
+  # Backoffice seul (sans backend) — pour tester l'interface en Docker
+  backoffice-standalone:
+    build:
+      context: ..
+      dockerfile: deployment/backoffice/Dockerfile.standalone
+    container_name: ce-backoffice-only
+    restart: unless-stopped
+    ports:
+      - "4200:80"
+    profiles:
+      - backoffice-only
+
+volumes:
+  mongo_data:

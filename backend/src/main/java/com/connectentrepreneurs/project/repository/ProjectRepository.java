@@ -1,3 +1,4 @@
+
 package com.connectentrepreneurs.project.repository;
 
 import com.connectentrepreneurs.project.model.Project;
@@ -11,3 +12,4 @@ public interface ProjectRepository extends MongoRepository<Project, String> {
     List<Project> findBySecteur(String secteur);
     long countByStatut(String statut);
 }
+

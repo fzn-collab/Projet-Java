@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ConnectEntrepreneurs Mobile</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .mobile-container {
+            width: 375px;
+            height: 812px;
+            background: #000;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .mobile-frame {
+            width: 100%;
+            height: 100%;
+            border: 12px solid #1a1a1a;
+            border-radius: 32px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .notch {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 150px;
+            height: 30px;
+            background: #1a1a1a;
+            border-radius: 0 0 20px 20px;
+            z-index: 1000;
+        }
+        
+        .app-content {
+            width: 100%;
+            height: 100%;
+            overflow: auto;
+            background: #fff;
+        }
+        
+        .app-content iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+        }
+        
+        .title {
+            text-align: center;
+            color: white;
+            margin-bottom: 20px;
+            font-size: 24px;
+            font-weight: bold;
+        }
+        
+        .info {
+            text-align: center;
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 14px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div>
+        <h1 class="title">ConnectEntrepreneurs Mobile</h1>
+        <div class="mobile-container">
+            <div class="mobile-frame">
+                <div class="notch"></div>
+                <div class="app-content">
+                    <iframe src="index.html"></iframe>
+                </div>
+            </div>
+        </div>
+        <p class="info">Application mobile en version web</p>
+    </div>
+</body>
+</html>
