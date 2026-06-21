@@ -1,244 +1,193 @@
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    FlatList,
-    RefreshControl,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
-import { getUserConversations } from "../services/apiService";
 
-import { auth } from "../services/authService";
-
-const CURRENT_USER_ID = auth.currentUser?.uid;
+import ScreenHeader from "../components/ScreenHeader";
+import {
+  getMyProfile,
+  getUser,
+  getUserConversations,
+} from "../services/apiService";
+import { colors, spacing, typography } from "../theme";
 
 export default function ChatListScreen({ navigation }) {
+  const [currentUserId, setCurrentUserId] = useState(null);
   const [conversations, setConversations] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
-
-  const loadConversations = async () => {
-    try {
-      const data = await getUserConversations(CURRENT_USER_ID);
-      setConversations(data);
-    } catch (error) {
-      console.error("Erreur:", error);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
-  };
 
   useEffect(() => {
-    loadConversations();
-  }, []);
+    const unsubscribe = navigation.addListener("focus", loadConversations);
+    return unsubscribe;
+  }, [navigation]);
 
-  const formatTime = (timestamp) => {
-    if (!timestamp) return "";
-    const date = new Date(timestamp);
-    const today = new Date();
-    if (date.toDateString() === today.toDateString()) {
-      return date.toLocaleTimeString("fr-FR", {
-        hour: "2-digit",
-        minute: "2-digit",
-      });
+  async function loadConversations() {
+    try {
+      setLoading(true);
+
+      const me = await getMyProfile();
+      const myId = me?.id;
+      setCurrentUserId(myId);
+
+      if (!myId) {
+        setConversations([]);
+        return;
+      }
+
+      const data = await getUserConversations(myId);
+      const list = Array.isArray(data) ? data : [];
+
+      // On enrichit chaque conversation avec le profil de l'autre utilisateur
+      const enriched = await Promise.all(
+        list.map(async (conv) => {
+          const otherUserId = Array.isArray(conv.participants)
+            ? conv.participants.find((id) => id !== myId)
+            : undefined;
+          const otherUser = otherUserId ? await getUser(otherUserId) : null;
+          return { ...conv, otherUserId, otherUser };
+        })
+      );
+
+      setConversations(enriched);
+    } catch (e) {
+      console.log("CHAT LIST ERROR:", e);
+      setConversations([]);
+    } finally {
+      setLoading(false);
     }
-    return date.toLocaleDateString("fr-FR", { day: "numeric", month: "short" });
-  };
+  }
+
+  function openChat(conv) {
+    if (!conv.otherUserId || !currentUserId) return;
+    navigation.navigate("Chat", {
+      conversationId: conv.id,
+      currentUserId,
+      otherUserId: conv.otherUserId,
+    });
+  }
+
+  function getInitial(name) {
+    return (name || "?").charAt(0).toUpperCase();
+  }
+
+  function formatTime(ts) {
+    if (!ts) return "";
+    const d = new Date(ts);
+    return d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+  }
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#1A73E8" />
-        <Text style={styles.loadingText}>Chargement...</Text>
+      <View style={styles.center}>
+        <ActivityIndicator size="large" color={colors.brandBlue} />
       </View>
     );
   }
 
   return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>Messages</Text>
-        <View style={styles.headerBadge}>
-          <Text style={styles.headerBadgeText}>{conversations.length}</Text>
-        </View>
-      </View>
+    <View style={styles.container}>
+      <ScreenHeader title="Messages" subtitle="Vos conversations" />
 
       <FlatList
         data={conversations}
         keyExtractor={(item) => item.id}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={() => {
-              setRefreshing(true);
-              loadConversations();
-            }}
-            colors={["#1A73E8"]}
-          />
-        }
+        contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>💬</Text>
-            <Text style={styles.emptyTitle}>Aucune conversation</Text>
-            <Text style={styles.emptySubtitle}>
-              Connectez-vous avec des entrepreneurs et démarrez une conversation
-              !
+            <Text style={styles.emptyTitle}>Pas encore de messages</Text>
+            <Text style={styles.emptyText}>
+              Connectez-vous avec d'autres entrepreneurs via Suggestions ou
+              Search. Vos conversations apparaîtront ici.
             </Text>
           </View>
         }
-        renderItem={({ item }) => {
-          const otherUser = item.participants.find(
-            (p) => p !== CURRENT_USER_ID,
-          );
-          const colors = [
-            "#1A73E8",
-            "#E91E63",
-            "#4CAF50",
-            "#FF9800",
-            "#9C27B0",
-          ];
-          const colorIndex = otherUser?.charCodeAt(0) % colors.length;
-          const avatarColor = colors[colorIndex];
-
-          return (
-            <TouchableOpacity
-              style={styles.conversationItem}
-              onPress={() =>
-                navigation.navigate("Chat", {
-                  conversationId: item.id,
-                  currentUserId: CURRENT_USER_ID,
-                  otherUserId: otherUser,
-                })
-              }
-              activeOpacity={0.7}
-            >
-              <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-                <Text style={styles.avatarText}>
-                  {otherUser?.charAt(0).toUpperCase()}
-                </Text>
-                <View style={styles.onlineIndicator} />
-              </View>
-
-              <View style={styles.conversationInfo}>
-                <View style={styles.conversationHeader}>
-                  <Text style={styles.userName}>{otherUser}</Text>
-                  <Text style={styles.timeText}>
-                    {formatTime(item.lastMessageTime)}
-                  </Text>
-                </View>
-                <View style={styles.lastMessageRow}>
-                  <Text style={styles.lastMessage} numberOfLines={1}>
-                    {item.lastMessage || "Démarrez la conversation..."}
-                  </Text>
-                </View>
-              </View>
-            </TouchableOpacity>
-          );
-        }}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
+        renderItem={({ item }) => (
+          <TouchableOpacity style={styles.row} onPress={() => openChat(item)}>
+            <View style={styles.avatar}>
+              <Text style={styles.avatarText}>
+                {getInitial(item.otherUser?.nom)}
+              </Text>
+            </View>
+            <View style={styles.info}>
+              <Text style={styles.name}>
+                {item.otherUser?.nom || "Utilisateur"}
+              </Text>
+              <Text style={styles.lastMessage} numberOfLines={1}>
+                {item.lastMessage || item.otherUser?.typeProfil || ""}
+              </Text>
+            </View>
+            <Text style={styles.time}>{formatTime(item.lastMessageTime)}</Text>
+          </TouchableOpacity>
+        )}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F0F2F5" },
-  loadingContainer: {
+  container: { flex: 1, backgroundColor: colors.background },
+  center: {
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#F0F2F5",
+    backgroundColor: colors.background,
   },
-  loadingText: { marginTop: 10, color: "#666", fontSize: 16 },
-
-  // Header
-  header: {
+  list: { paddingBottom: spacing.xl, flexGrow: 1 },
+  row: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "#1A73E8",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    elevation: 4,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
-  },
-  headerTitle: { color: "white", fontSize: 22, fontWeight: "700", flex: 1 },
-  headerBadge: {
-    backgroundColor: "rgba(255,255,255,0.3)",
-    borderRadius: 12,
-    paddingHorizontal: 10,
-    paddingVertical: 3,
-  },
-  headerBadgeText: { color: "white", fontSize: 14, fontWeight: "600" },
-
-  // Empty
-  emptyContainer: {
-    flex: 1,
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 100,
-    paddingHorizontal: 40,
-  },
-  emptyIcon: { fontSize: 60, marginBottom: 20 },
-  emptyTitle: {
-    fontSize: 20,
-    fontWeight: "700",
-    color: "#333",
-    marginBottom: 10,
-  },
-  emptySubtitle: {
-    fontSize: 15,
-    color: "#888",
-    textAlign: "center",
-    lineHeight: 22,
-  },
-
-  // Conversation item
-  conversationItem: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "white",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    paddingHorizontal: spacing.xl - 2,
+    paddingVertical: spacing.md + 2,
+    gap: spacing.md,
   },
   avatar: {
-    width: 54,
-    height: 54,
-    borderRadius: 27,
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: colors.brandBluePale,
+    alignItems: "center",
     justifyContent: "center",
+  },
+  avatarText: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  info: { flex: 1 },
+  name: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+  lastMessage: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+    marginTop: 2,
+  },
+  time: {
+    fontSize: typography.sizes.xs,
+    color: colors.textMuted,
+  },
+  emptyContainer: {
     alignItems: "center",
-    marginRight: 14,
-    position: "relative",
+    justifyContent: "center",
+    padding: spacing.xxxl,
+    marginTop: 60,
   },
-  avatarText: { color: "white", fontSize: 22, fontWeight: "700" },
-  onlineIndicator: {
-    position: "absolute",
-    bottom: 2,
-    right: 2,
-    width: 13,
-    height: 13,
-    borderRadius: 7,
-    backgroundColor: "#4CAF50",
-    borderWidth: 2,
-    borderColor: "white",
+  emptyTitle: {
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.semibold,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
   },
-  conversationInfo: { flex: 1 },
-  conversationHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    marginBottom: 5,
+  emptyText: {
+    textAlign: "center",
+    color: colors.textSecondary,
+    lineHeight: 22,
   },
-  userName: { fontSize: 16, fontWeight: "700", color: "#1A1A1A" },
-  timeText: { fontSize: 12, color: "#999" },
-  lastMessageRow: { flexDirection: "row", alignItems: "center" },
-  lastMessage: { fontSize: 14, color: "#666", flex: 1 },
-  separator: { height: 1, backgroundColor: "#F0F0F0", marginLeft: 84 },
 });

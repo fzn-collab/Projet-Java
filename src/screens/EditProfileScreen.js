@@ -1,15 +1,17 @@
 import { useState } from "react";
 import {
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TextInput,
-    TouchableOpacity,
-    View,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TextInput,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
+import ScreenHeader from "../components/ScreenHeader";
 import { updateMyProfile } from "../services/apiService";
+import { colors, components, layout, radius, spacing, typography } from "../theme";
 
 export default function EditProfileScreen({ route, navigation }) {
   const user = route.params?.user;
@@ -61,18 +63,17 @@ export default function EditProfileScreen({ route, navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>Edit Profile</Text>
-      </View>
+      <ScreenHeader
+        title="Edit Profile"
+        subtitle="Mettez à jour vos informations"
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         <TextInput
           style={styles.input}
           placeholder="Nom complet"
+          placeholderTextColor={colors.textMuted}
           value={nom}
           onChangeText={setNom}
         />
@@ -80,6 +81,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Type profil : DEVELOPPEUR, INVESTISSEUR..."
+          placeholderTextColor={colors.textMuted}
           value={typeProfil}
           onChangeText={setTypeProfil}
         />
@@ -87,6 +89,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Secteur"
+          placeholderTextColor={colors.textMuted}
           value={secteur}
           onChangeText={setSecteur}
         />
@@ -94,6 +97,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Compétences séparées par virgule"
+          placeholderTextColor={colors.textMuted}
           value={competences}
           onChangeText={setCompetences}
         />
@@ -101,6 +105,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Besoin"
+          placeholderTextColor={colors.textMuted}
           value={besoin}
           onChangeText={setBesoin}
         />
@@ -108,6 +113,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Ville"
+          placeholderTextColor={colors.textMuted}
           value={ville}
           onChangeText={setVille}
         />
@@ -115,6 +121,7 @@ export default function EditProfileScreen({ route, navigation }) {
         <TextInput
           style={styles.input}
           placeholder="Pays"
+          placeholderTextColor={colors.textMuted}
           value={pays}
           onChangeText={setPays}
         />
@@ -128,53 +135,22 @@ export default function EditProfileScreen({ route, navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    backgroundColor: "#0D47A1",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-  },
-
-  back: {
-    color: "#fff",
-    fontSize: 34,
-  },
-
-  headerTitle: {
-    color: "#fff",
-    fontSize: 22,
-    fontWeight: "bold",
-  },
-
+  container: layout.screen,
   content: {
-    padding: 20,
+    padding: spacing.xl,
+    paddingTop: spacing.md,
   },
-
   input: {
-    backgroundColor: "#fff",
-    borderRadius: 14,
-    padding: 15,
-    marginBottom: 14,
-    fontSize: 15,
-    borderWidth: 1,
-    borderColor: "#E3F2FD",
+    ...components.input,
+    borderRadius: radius.lg - 2,
+    padding: spacing.lg - 1,
+    marginBottom: spacing.md + 2,
+    borderColor: colors.brandBluePale,
   },
-
   button: {
-    backgroundColor: "#0D47A1",
-    padding: 15,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 10,
+    ...components.buttonPrimary,
+    borderRadius: radius.lg - 2,
+    marginTop: spacing.sm + 2,
   },
-
-  buttonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  buttonText: components.buttonPrimaryText,
 });

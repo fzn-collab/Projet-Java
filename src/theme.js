@@ -1,11 +1,10 @@
-/**
- * Connecto design system — charte graphique extraite du mockup UI/UX.
- * Réutiliser ces tokens sur tous les écrans pour un style cohérent.
- */
-
 export const colors = {
   primaryNavy: "#051D40",
   primaryNavyLight: "#0A2D5C",
+
+  brandBlue: "#0D47A1",
+  brandBluePale: "#E3F2FD",
+
   accentBlue: "#0066FF",
   accentBlueLight: "#3385FF",
   accentBluePale: "#E8F1FF",
@@ -17,6 +16,8 @@ export const colors = {
   textPrimary: "#051D40",
   textSecondary: "#64748B",
   textMuted: "#94A3B8",
+  textSubtle: "#607D8B",
+  textBody: "#455A64",
   textInverse: "#FFFFFF",
 
   border: "#E2E8F0",
@@ -137,43 +138,43 @@ export const components = {
     fontSize: typography.sizes.md,
     color: colors.textPrimary,
   },
-  badgeMatch: {
-    backgroundColor: colors.successBg,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  badgeMatchText: {
-    color: colors.success,
-    fontSize: typography.sizes.sm,
-    fontWeight: typography.weights.semibold,
-  },
-  badgeSkill: {
-    backgroundColor: colors.skillTagBg,
-    borderRadius: radius.pill,
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-  },
-  badgeSkillText: {
-    color: colors.skillTagText,
-    fontSize: typography.sizes.xs,
-    fontWeight: typography.weights.medium,
-  },
-  badgeStatusActive: {
-    backgroundColor: colors.successBg,
-    color: colors.success,
-  },
-  badgeStatusSuspended: {
-    backgroundColor: colors.errorBg,
-    color: colors.error,
-  },
 };
-
-export default {
-  colors,
-  typography,
-  spacing,
-  radius,
-  shadows,
-  components,
+export const layout = {
+  screen: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  center: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    alignItems: "center",
+    padding: spacing.xl,
+    paddingBottom: spacing.xxxl,
+  },
+  scrollContentOverlap: {
+    padding: spacing.xl - 2,
+    paddingTop: spacing.md,
+    marginTop: -20,
+  },
+  tabHeader: {
+    backgroundColor: colors.primaryNavy,
+    paddingHorizontal: spacing.xl,
+  },
+  sectionTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textSecondary,
+    marginHorizontal: spacing.xl - 2,
+    marginBottom: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  listContent: {
+    padding: spacing.xl - 2,
+    paddingTop: spacing.sm,
+    paddingBottom: spacing.xxxl,
+  },
 };

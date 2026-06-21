@@ -1,7 +1,7 @@
 # Connecto — Inventaire des appels API (dossier `/mobile`)
 
 > Base URL Spring Boot utilisée dans le code :
-> - `http://192.168.0.115:8083` — `src/services/apiService.js`
+> - `http://10.130.182.153:8080` — `src/services/apiService.js`
 > - `http://10.0.2.2:8080` — `src/screens/RegisterScreen.js` (émulateur Android)
 >
 > **Note :** ces deux URLs pointent probablement vers le même backend avec des hôtes différents selon l'environnement. À unifier avant la mise en production.

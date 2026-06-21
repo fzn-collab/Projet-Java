@@ -7,7 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+
 import { loginUser } from "../services/authService";
+import { colors, components, layout, spacing, typography } from "../theme";
 
 export default function LoginScreen({ navigation }) {
   const [email, setEmail] = useState("");
@@ -24,12 +26,13 @@ export default function LoginScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <Text style={styles.title}>ConnectEntrepreneurs</Text>
+      <Text style={styles.title}>Connecto</Text>
       <Text style={styles.subtitle}>Connectez-vous à votre compte</Text>
 
       <TextInput
         style={styles.input}
         placeholder="Email"
+        placeholderTextColor={colors.textMuted}
         value={email}
         onChangeText={setEmail}
         keyboardType="email-address"
@@ -39,6 +42,7 @@ export default function LoginScreen({ navigation }) {
       <TextInput
         style={styles.input}
         placeholder="Mot de passe"
+        placeholderTextColor={colors.textMuted}
         value={password}
         onChangeText={setPassword}
         secureTextEntry
@@ -61,39 +65,38 @@ export default function LoginScreen({ navigation }) {
 
 const styles = StyleSheet.create({
   container: {
-    flex: 1,
-    justifyContent: "center",
-    padding: 24,
-    backgroundColor: "#fff",
+    ...layout.center,
+    padding: spacing.xxl,
+    backgroundColor: colors.background,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    marginBottom: 8,
+    fontSize: typography.sizes.xxl + 6,
+    fontWeight: typography.weights.bold,
+    marginBottom: spacing.sm,
     textAlign: "center",
-    color: "#6C47FF",
+    color: colors.brandBlue,
   },
   subtitle: {
-    fontSize: 16,
-    marginBottom: 32,
+    fontSize: typography.sizes.md,
+    marginBottom: spacing.xxxl,
     textAlign: "center",
-    color: "#888",
+    color: colors.textSecondary,
   },
   input: {
-    borderWidth: 1,
-    borderColor: "#ddd",
-    borderRadius: 8,
-    padding: 12,
-    marginBottom: 16,
-    fontSize: 16,
+    ...components.input,
+    width: "100%",
+    marginBottom: spacing.lg,
   },
   btn: {
-    backgroundColor: "#6C47FF",
-    borderRadius: 8,
-    padding: 14,
-    alignItems: "center",
-    marginBottom: 16,
+    ...components.buttonPrimary,
+    width: "100%",
+    marginBottom: spacing.lg,
   },
-  btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  link: { textAlign: "center", marginTop: 8, color: "#6C47FF", fontSize: 14 },
+  btnText: components.buttonPrimaryText,
+  link: {
+    textAlign: "center",
+    marginTop: spacing.sm,
+    color: colors.accentBlue,
+    fontSize: typography.sizes.sm,
+  },
 });

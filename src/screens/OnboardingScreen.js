@@ -1,8 +1,14 @@
+import { LinearGradient } from "expo-linear-gradient";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+
+import { colors, components, radius, spacing, typography } from "../theme";
 
 export default function OnboardingScreen({ navigation }) {
   return (
-    <View style={styles.container}>
+    <LinearGradient
+      colors={[colors.gradientStart, colors.gradientEnd]}
+      style={styles.container}
+    >
       <Text style={styles.logo}>🤝</Text>
       <Text style={styles.title}>ConnectEntrepreneurs</Text>
       <Text style={styles.subtitle}>
@@ -20,7 +26,7 @@ export default function OnboardingScreen({ navigation }) {
       <TouchableOpacity onPress={() => navigation.navigate("Login")}>
         <Text style={styles.link}>Déjà un compte ? Se connecter</Text>
       </TouchableOpacity>
-    </View>
+    </LinearGradient>
   );
 }
 
@@ -29,32 +35,37 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    padding: 32,
-    backgroundColor: "#fff",
+    padding: spacing.xxxl,
   },
-  logo: { fontSize: 72, marginBottom: 24 },
+  logo: { fontSize: 72, marginBottom: spacing.xxl },
   title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#6C47FF",
+    fontSize: typography.sizes.xxl + 6,
+    fontWeight: typography.weights.bold,
+    color: colors.textInverse,
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
   subtitle: {
-    fontSize: 16,
-    color: "#888",
+    fontSize: typography.sizes.md,
+    color: "rgba(255,255,255,0.75)",
     textAlign: "center",
-    marginBottom: 48,
+    marginBottom: spacing.xxxl + spacing.xl,
     lineHeight: 24,
   },
   btn: {
-    backgroundColor: "#6C47FF",
-    borderRadius: 8,
-    padding: 16,
+    ...components.buttonPrimary,
     width: "100%",
-    alignItems: "center",
-    marginBottom: 16,
+    backgroundColor: colors.surface,
+    marginBottom: spacing.lg,
   },
-  btnText: { color: "#fff", fontWeight: "600", fontSize: 16 },
-  link: { color: "#6C47FF", fontSize: 14 },
+  btnText: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
+    color: colors.brandBlue,
+  },
+  link: {
+    color: "rgba(255,255,255,0.85)",
+    fontSize: typography.sizes.sm,
+    textAlign: "center",
+  },
 });

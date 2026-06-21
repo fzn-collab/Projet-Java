@@ -10,57 +10,100 @@ import {
 } from "react-native";
 
 import ProjectCard from "../components/ProjectCard";
-import { searchProjects } from "../services/apiService";
+import ScreenHeader from "../components/ScreenHeader";
+import { getProjectsByUser } from "../services/apiService";
+import { auth } from "../services/authService";
+import { colors, components, layout, radius, shadows, spacing, typography } from "../theme";
 
 export default function ProjectScreen({ navigation }) {
   const [query, setQuery] = useState("");
+  const [allProjects, setAllProjects] = useState([]);
   const [projects, setProjects] = useState([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    handleSearch("");
-  }, []);
+    const unsubscribe = navigation.addListener("focus", loadMyProjects);
+    return unsubscribe;
+  }, [navigation]);
 
-  async function handleSearch(value = query) {
+  useEffect(() => {
+    applyFilter(query, allProjects);
+  }, [query, allProjects]);
+
+  async function loadMyProjects() {
+    const ownerId = auth.currentUser?.uid;
+    if (!ownerId) {
+      setAllProjects([]);
+      setProjects([]);
+      return;
+    }
     try {
       setLoading(true);
-
-      const data = await searchProjects({
-        besoin: value.trim(),
-      });
-
-      console.log("PROJECTS:", data);
-      setProjects(Array.isArray(data) ? data : []);
+      const data = await getProjectsByUser(ownerId);
+      const list = Array.isArray(data) ? data : [];
+      setAllProjects(list);
+      applyFilter(query, list);
     } catch (error) {
-      console.log("PROJECT SEARCH ERROR:", error);
+      console.log("PROJECT LOAD ERROR:", error);
+      setAllProjects([]);
+      setProjects([]);
     } finally {
       setLoading(false);
     }
   }
 
+  function applyFilter(value, source) {
+    const trimmed = value.trim().toLowerCase();
+    if (!trimmed) { setProjects(source); return; }
+    setProjects(
+      source.filter((p) =>
+        [p.titre, p.secteur, p.besoin, p.description]
+          .filter(Boolean)
+          .some((f) => f.toLowerCase().includes(trimmed)),
+      ),
+    );
+  }
+
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Projects</Text>
-      </View>
+      <ScreenHeader
+        title="Projects"
+        subtitle={`${projects.length} projet${projects.length !== 1 ? "s" : ""}`}
+      />
 
+      {/* Bouton créer projet */}
+      <TouchableOpacity
+        style={styles.createButton}
+        onPress={() => navigation.navigate("ProjectForm", { project: null })}
+      >
+        <Text style={styles.createButtonText}>+ Nouveau projet</Text>
+      </TouchableOpacity>
+
+      {/* Barre de recherche */}
       <View style={styles.searchBox}>
         <TextInput
-          placeholder="Search by need, e.g. Java..."
+          placeholder="Rechercher dans vos projets..."
+          placeholderTextColor={colors.textMuted}
           value={query}
           onChangeText={setQuery}
           style={styles.input}
         />
-
-        <TouchableOpacity onPress={() => handleSearch()} style={styles.button}>
-          <Text style={styles.buttonText}>🔍</Text>
+        <TouchableOpacity
+          onPress={() => applyFilter(query, allProjects)}
+          style={styles.searchButton}
+        >
+          <Text style={styles.searchButtonText}>🔍</Text>
         </TouchableOpacity>
       </View>
 
-      <Text style={styles.sectionTitle}>Projects List ({projects.length})</Text>
+      <Text style={styles.sectionTitle}>Mes projets ({projects.length})</Text>
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0D47A1" />
+        <ActivityIndicator
+          size="large"
+          color={colors.brandBlue}
+          style={{ marginTop: 40 }}
+        />
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
@@ -75,7 +118,9 @@ export default function ProjectScreen({ navigation }) {
             />
           )}
           ListEmptyComponent={
-            <Text style={styles.empty}>No projects found.</Text>
+            <Text style={styles.empty}>
+              Aucun projet. Crée ton premier projet !
+            </Text>
           }
         />
       )}
@@ -84,47 +129,46 @@ export default function ProjectScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    backgroundColor: "#0D47A1",
+  container: layout.screen,
+  createButton: {
+    ...components.buttonPrimary,
+    marginHorizontal: spacing.xl - 2,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xs,
+    borderRadius: radius.lg,
   },
-  title: { color: "#fff", fontSize: 22, fontWeight: "bold" },
+  createButtonText: components.buttonPrimaryText,
   searchBox: {
     flexDirection: "row",
-    margin: 18,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    paddingHorizontal: 12,
+    margin: spacing.xl - 2,
+    marginTop: spacing.md,
+    backgroundColor: "#FFFFFF",
+    borderRadius: radius.lg + 2,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    ...shadows.card,
   },
-  input: { flex: 1, height: 48, fontSize: 14 },
-  button: {
+  input: {
+    flex: 1,
+    height: 48,
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
+  },
+  searchButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     alignItems: "center",
     justifyContent: "center",
   },
-  buttonText: { fontSize: 20 },
-  sectionTitle: {
-    marginHorizontal: 18,
-    marginBottom: 10,
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#0D47A1",
-  },
-  list: { paddingHorizontal: 18, paddingBottom: 20 },
+  searchButtonText: { fontSize: typography.sizes.xl },
+  sectionTitle: layout.sectionTitle,
+  list: layout.listContent,
   empty: {
     textAlign: "center",
     marginTop: 30,
-    color: "#607D8B",
+    color: colors.textSubtle,
+    fontSize: typography.sizes.md,
   },
 });

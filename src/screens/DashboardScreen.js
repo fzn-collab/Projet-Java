@@ -1,26 +1,43 @@
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-const API_URL = "http://192.168.0.105:8083";
+import ScreenHeader from "../components/ScreenHeader";
+import { auth } from "../services/authService";
+import {
+  colors,
+  components,
+  layout,
+  radius,
+  spacing,
+  typography,
+} from "../theme";
+
+const API_URL = "http://10.130.182.153:8080";
 
 export default function DashboardScreen({ navigation }) {
   const [dashboard, setDashboard] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  const userId = "user123";
+  const userId = auth.currentUser?.uid;
 
   useEffect(() => {
     fetchDashboard();
   }, []);
 
   const fetchDashboard = async () => {
+    if (!userId) {
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await fetch(`${API_URL}/api/dashboard/${userId}`);
       const data = await response.json();
@@ -35,99 +52,132 @@ export default function DashboardScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#4CAF50" />
-        <Text>Chargement...</Text>
+        <ActivityIndicator size="large" color={colors.brandBlue} />
+        <Text style={styles.loadingText}>Chargement...</Text>
       </View>
     );
   }
 
   return (
-    <ScrollView style={styles.container}>
-      <Text style={styles.title}>🚀 Mon Dashboard</Text>
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Dashboard"
+        subtitle="Vue d'ensemble de votre activité"
+        onBack={() => navigation.goBack()}
+      />
 
-      <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{dashboard?.totalProjets || 0}</Text>
-          <Text style={styles.statLabel}>Total Projets</Text>
+      <ScrollView contentContainerStyle={styles.content}>
+        <View style={styles.statsRow}>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{dashboard?.totalProjets || 0}</Text>
+            <Text style={styles.statLabel}>Total Projets</Text>
+          </View>
+          <View style={styles.statCard}>
+            <Text style={styles.statNumber}>{dashboard?.projetsActifs || 0}</Text>
+            <Text style={styles.statLabel}>Projets Actifs</Text>
+          </View>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{dashboard?.projetsActifs || 0}</Text>
-          <Text style={styles.statLabel}>Projets Actifs</Text>
-        </View>
-      </View>
 
-      <TouchableOpacity
-        style={styles.button}
-        onPress={() => navigation.navigate("MyProjects")}
-      >
-        <Text style={styles.buttonText}>📋 Voir mes projets</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.button}
+          onPress={() => navigation.navigate("MyProjects")}
+        >
+          <Text style={styles.buttonText}>Voir mes projets</Text>
+        </TouchableOpacity>
 
-      <TouchableOpacity
-        style={[styles.button, styles.buttonGreen]}
-        onPress={() => navigation.navigate("ProjectForm", { project: null })}
-      >
-        <Text style={styles.buttonText}>➕ Créer un projet</Text>
-      </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.button, styles.buttonSecondary]}
+          onPress={() => navigation.navigate("ProjectForm", { project: null })}
+        >
+          <Text style={styles.buttonSecondaryText}>Créer un projet</Text>
+        </TouchableOpacity>
 
-      <Text style={styles.sectionTitle}>Projets récents</Text>
-      {dashboard?.projetsRecents?.length === 0 && (
-        <Text style={styles.empty}>Aucun projet pour l'instant</Text>
-      )}
-      {dashboard?.projetsRecents?.map((project) => (
-        <View key={project.id} style={styles.projectCard}>
-          <Text style={styles.projectTitle}>{project.titre}</Text>
-          <Text style={styles.projectSecteur}>{project.secteur}</Text>
-          <Text style={styles.projectBesoin}>Besoin : {project.besoin}</Text>
-        </View>
-      ))}
-    </ScrollView>
+        <Text style={styles.sectionTitle}>Projets récents</Text>
+        {dashboard?.projetsRecents?.length === 0 && (
+          <Text style={styles.empty}>Aucun projet pour l'instant</Text>
+        )}
+        {dashboard?.projetsRecents?.map((project) => (
+          <View key={project.id} style={styles.projectCard}>
+            <Text style={styles.projectTitle}>{project.titre}</Text>
+            <Text style={styles.projectSecteur}>{project.secteur}</Text>
+            <Text style={styles.projectBesoin}>Besoin : {project.besoin}</Text>
+          </View>
+        ))}
+      </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#f5f5f5", padding: 16 },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  title: { fontSize: 24, fontWeight: "bold", marginBottom: 20, color: "#333" },
+  container: layout.screen,
+  center: layout.center,
+  loadingText: {
+    marginTop: spacing.sm + 2,
+    color: colors.textSecondary,
+  },
+  content: {
+    padding: spacing.lg,
+    paddingTop: spacing.md,
+  },
   statsRow: {
     flexDirection: "row",
     justifyContent: "space-between",
-    marginBottom: 20,
+    marginBottom: spacing.xl,
+    gap: spacing.md,
   },
   statCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 20,
-    flex: 0.48,
+    ...components.card,
+    flex: 1,
     alignItems: "center",
-    elevation: 3,
+    paddingVertical: spacing.xl,
   },
-  statNumber: { fontSize: 32, fontWeight: "bold", color: "#4CAF50" },
-  statLabel: { fontSize: 12, color: "#666", marginTop: 4 },
+  statNumber: {
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  statLabel: {
+    fontSize: typography.sizes.xs,
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+  },
   button: {
-    backgroundColor: "#2196F3",
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 10,
-    alignItems: "center",
+    ...components.buttonPrimary,
+    borderRadius: radius.lg - 2,
+    marginBottom: spacing.sm + 2,
   },
-  buttonGreen: { backgroundColor: "#4CAF50" },
-  buttonText: { color: "#fff", fontSize: 16, fontWeight: "bold" },
+  buttonSecondary: {
+    ...components.buttonSecondary,
+    borderRadius: radius.lg - 2,
+    marginBottom: spacing.sm + 2,
+  },
+  buttonText: components.buttonPrimaryText,
+  buttonSecondaryText: components.buttonSecondaryText,
   sectionTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginTop: 20,
-    marginBottom: 10,
+    ...layout.sectionTitle,
+    marginHorizontal: 0,
+    marginTop: spacing.md,
   },
-  empty: { color: "#999", textAlign: "center", marginTop: 20 },
+  empty: {
+    color: colors.textMuted,
+    textAlign: "center",
+    marginTop: spacing.xl,
+  },
   projectCard: {
-    backgroundColor: "#fff",
-    borderRadius: 10,
-    padding: 15,
-    marginBottom: 10,
-    elevation: 2,
+    ...components.card,
+    marginBottom: spacing.sm + 2,
   },
-  projectTitle: { fontSize: 16, fontWeight: "bold", color: "#333" },
-  projectSecteur: { color: "#2196F3", marginTop: 4 },
-  projectBesoin: { color: "#666", marginTop: 4 },
+  projectTitle: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  projectSecteur: {
+    color: colors.accentBlue,
+    marginTop: spacing.xs,
+  },
+  projectBesoin: {
+    color: colors.textBody,
+    marginTop: spacing.xs,
+  },
 });

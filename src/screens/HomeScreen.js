@@ -7,6 +7,8 @@ import {
   View,
 } from "react-native";
 
+import { colors, layout, radius, shadows, spacing, typography } from "../theme";
+
 export default function HomeScreen({ navigation }) {
   return (
     <View style={styles.container}>
@@ -20,7 +22,11 @@ export default function HomeScreen({ navigation }) {
         </View>
 
         <TouchableOpacity style={styles.notification}>
-          <Ionicons name="notifications-outline" size={22} color="#0D47A1" />
+          <Ionicons
+            name="notifications-outline"
+            size={22}
+            color={colors.brandBlue}
+          />
         </TouchableOpacity>
       </View>
 
@@ -35,7 +41,7 @@ export default function HomeScreen({ navigation }) {
               Find people you might collaborate with
             </Text>
           </View>
-          <Ionicons name="people" size={38} color="#4F7DF3" />
+          <Ionicons name="people" size={38} color={colors.accentBlueLight} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -72,7 +78,11 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.cardTitle}>Messages</Text>
             <Text style={styles.cardText}>Chat with your connections</Text>
           </View>
-          <Ionicons name="chatbubble-ellipses" size={36} color="#1976D2" />
+          <Ionicons
+            name="chatbubble-ellipses"
+            size={36}
+            color={colors.brandBlue}
+          />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -83,7 +93,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.cardTitle}>Dashboard</Text>
             <Text style={styles.cardText}>View Your Dashboard</Text>
           </View>
-          <Ionicons name="people-circle" size={38} color="#1565C0" />
+          <Ionicons name="people-circle" size={38} color={colors.brandBlue} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -94,7 +104,7 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.cardTitle}>My Profile</Text>
             <Text style={styles.cardText}>View your personal profile</Text>
           </View>
-          <Ionicons name="person-circle" size={38} color="#0D47A1" />
+          <Ionicons name="person-circle" size={38} color={colors.brandBlue} />
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -105,7 +115,11 @@ export default function HomeScreen({ navigation }) {
             <Text style={styles.cardTitle}>Notifications</Text>
             <Text style={styles.cardText}>View your Notifications</Text>
           </View>
-          <Ionicons name="person-circle" size={38} color="#0D47A1" />
+          <Ionicons
+            name="notifications"
+            size={38}
+            color={colors.brandBlue}
+          />
         </TouchableOpacity>
       </ScrollView>
     </View>
@@ -113,83 +127,60 @@ export default function HomeScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: "#F8FAFC",
-  },
-
+  container: layout.screen,
   header: {
-    backgroundColor: "#0D47A1",
+    ...layout.tabHeader,
     paddingTop: 70,
-    paddingHorizontal: 24,
     paddingBottom: 35,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
     flexDirection: "row",
     justifyContent: "space-between",
   },
-
   logo: {
-    color: "#fff",
-    fontSize: 32,
-    fontWeight: "bold",
-    marginBottom: 24,
+    color: colors.textInverse,
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
+    marginBottom: spacing.xxl,
   },
-
   hello: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
+    color: colors.textInverse,
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.bold,
   },
-
   subtitle: {
-    color: "#E3F2FD",
-    fontSize: 14,
+    color: colors.brandBluePale,
+    fontSize: typography.sizes.sm,
     lineHeight: 21,
-    marginTop: 8,
+    marginTop: spacing.sm,
     width: 260,
   },
-
   notification: {
-    backgroundColor: "#fff",
+    backgroundColor: colors.surface,
     width: 42,
     height: 42,
     borderRadius: 21,
     alignItems: "center",
     justifyContent: "center",
   },
-
-  content: {
-    padding: 20,
-    marginTop: -22,
-  },
-
+  content: layout.scrollContentOverlap,
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg + 2,
+    padding: spacing.xl - 2,
+    marginBottom: spacing.md + 2,
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 5 },
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    ...shadows.card,
   },
-
   cardTitle: {
-    color: "#0D47A1",
-    fontSize: 18,
-    fontWeight: "bold",
+    color: colors.brandBlue,
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
     marginBottom: 5,
   },
-
   cardText: {
-    color: "#607D8B",
-    fontSize: 13,
+    color: colors.textSubtle,
+    fontSize: typography.sizes.sm - 1,
     width: 230,
     lineHeight: 18,
   },

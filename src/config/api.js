@@ -1,8 +1,8 @@
 import { Platform } from "react-native";
 
 /** Adresse du backend Spring Boot — modifier selon votre environnement. */
-const LAN_IP = "192.168.0.115";
-const PORT = 8083;
+const LAN_IP = "10.130.182.153";
+const PORT = 8080;
 
 function resolveApiUrl() {
   if (Platform.OS === "android") {

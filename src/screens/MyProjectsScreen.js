@@ -9,7 +9,19 @@ import {
   View,
 } from "react-native";
 
-const API_URL = "http://192.168.0.105:8083";
+import ScreenHeader from "../components/ScreenHeader";
+import { getProjectsByUser } from "../services/apiService";
+import { auth } from "../services/authService";
+import {
+  colors,
+  components,
+  layout,
+  radius,
+  spacing,
+  typography,
+} from "../theme";
+
+const API_URL = "http://10.130.182.153:8080";
 
 export default function MyProjectsScreen({ navigation }) {
   const [projects, setProjects] = useState([]);
@@ -21,13 +33,20 @@ export default function MyProjectsScreen({ navigation }) {
   }, [navigation]);
 
   const fetchProjects = async () => {
+    const ownerId = auth.currentUser?.uid;
+    if (!ownerId) {
+      setProjects([]);
+      setLoading(false);
+      return;
+    }
+
     try {
       setLoading(true);
-      const response = await fetch(`${API_URL}/api/projects`);
-      const data = await response.json();
+      const data = await getProjectsByUser(ownerId);
       setProjects(Array.isArray(data) ? data : []);
     } catch (error) {
       console.log("Erreur:", error);
+      setProjects([]);
     } finally {
       setLoading(false);
     }
@@ -50,16 +69,18 @@ export default function MyProjectsScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0D47A1" />
+        <ActivityIndicator size="large" color={colors.brandBlue} />
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Projects</Text>
-      </View>
+      <ScreenHeader
+        title="My Projects"
+        subtitle={`${projects.length} projet${projects.length !== 1 ? "s" : ""}`}
+        onBack={() => navigation.goBack()}
+      />
 
       <View style={styles.content}>
         <TouchableOpacity
@@ -69,7 +90,7 @@ export default function MyProjectsScreen({ navigation }) {
           <Text style={styles.addButtonText}>+ Nouveau projet</Text>
         </TouchableOpacity>
 
-        <ScrollView>
+        <ScrollView showsVerticalScrollIndicator={false}>
           {projects.length === 0 && (
             <Text style={styles.empty}>
               Aucun projet. Crée ton premier projet !
@@ -79,7 +100,7 @@ export default function MyProjectsScreen({ navigation }) {
           {projects.map((project) => (
             <View key={project.id} style={styles.card}>
               <View style={styles.cardTop}>
-                <View>
+                <View style={{ flex: 1 }}>
                   <Text style={styles.cardTitle}>{project.titre}</Text>
                   <Text style={styles.cardSecteur}>🏢 {project.secteur}</Text>
                 </View>
@@ -89,8 +110,13 @@ export default function MyProjectsScreen({ navigation }) {
                     styles.status,
                     {
                       backgroundColor:
-                        project.statut === "actif" ? "#E8F5E9" : "#ECEFF1",
-                      color: project.statut === "actif" ? "#2E7D32" : "#607D8B",
+                        project.statut === "actif"
+                          ? colors.successBg
+                          : colors.surfaceMuted,
+                      color:
+                        project.statut === "actif"
+                          ? colors.success
+                          : colors.textSubtle,
                     },
                   ]}
                 >
@@ -126,113 +152,75 @@ export default function MyProjectsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    backgroundColor: "#0D47A1",
-  },
-
-  title: {
-    color: "#fff",
-    fontSize: 24,
-    fontWeight: "bold",
-  },
-
+  container: layout.screen,
+  center: layout.center,
   content: {
-    padding: 18,
+    padding: spacing.xl - 2,
     flex: 1,
   },
-
   addButton: {
-    backgroundColor: "#0D47A1",
-    padding: 15,
-    borderRadius: 16,
-    alignItems: "center",
-    marginBottom: 16,
+    ...components.buttonPrimary,
+    borderRadius: radius.lg,
+    marginBottom: spacing.lg,
   },
-
-  addButtonText: {
-    color: "#fff",
-    fontSize: 16,
-    fontWeight: "bold",
-  },
-
+  addButtonText: components.buttonPrimaryText,
   empty: {
     textAlign: "center",
-    color: "#607D8B",
+    color: colors.textSubtle,
     marginTop: 40,
-    fontSize: 16,
+    fontSize: typography.sizes.md,
   },
-
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 16,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    ...components.card,
+    marginBottom: spacing.md + 2,
   },
-
   cardTop: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "flex-start",
   },
-
   cardTitle: {
-    fontSize: 18,
-    fontWeight: "bold",
-    color: "#0D47A1",
+    fontSize: typography.sizes.lg,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
   },
-
   cardSecteur: {
-    color: "#607D8B",
+    color: colors.textSubtle,
     marginTop: 5,
   },
-
   cardBesoin: {
-    color: "#455A64",
-    marginTop: 10,
+    color: colors.textBody,
+    marginTop: spacing.sm + 2,
   },
-
   status: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "bold",
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.bold,
+    overflow: "hidden",
   },
-
   cardButtons: {
     flexDirection: "row",
-    marginTop: 14,
-    gap: 10,
+    marginTop: spacing.md + 2,
+    gap: spacing.sm + 2,
   },
-
   editBtn: {
-    backgroundColor: "#2196F3",
-    padding: 10,
-    borderRadius: 12,
+    backgroundColor: colors.accentBlue,
+    padding: spacing.sm + 2,
+    borderRadius: radius.md,
     flex: 1,
     alignItems: "center",
   },
-
   deleteBtn: {
-    backgroundColor: "#EF5350",
-    padding: 10,
-    borderRadius: 12,
+    backgroundColor: colors.error,
+    padding: spacing.sm + 2,
+    borderRadius: radius.md,
     flex: 1,
     alignItems: "center",
   },
-
   btnText: {
-    color: "#fff",
-    fontWeight: "bold",
+    color: colors.textInverse,
+    fontWeight: typography.weights.bold,
   },
 });

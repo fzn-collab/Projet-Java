@@ -3,13 +3,13 @@ import {
   ActivityIndicator,
   FlatList,
   StyleSheet,
-  Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 
 import MatchCard from "../components/MatchCard";
-import { getSuggestions } from "../services/apiService";
+import ScreenHeader from "../components/ScreenHeader";
+import { getMyProfile, getSuggestions } from "../services/apiService";
+import { colors, layout, spacing } from "../theme";
 
 export default function SuggestionsScreen({ navigation }) {
   const [matches, setMatches] = useState([]);
@@ -21,10 +21,20 @@ export default function SuggestionsScreen({ navigation }) {
 
   async function loadData() {
     try {
+      const profile = await getMyProfile();
+
+      console.log("PROFILE =", profile);
+      console.log("PROFILE ID =", profile?.id);
+      console.log("FIREBASE UID =", profile?.firebaseUid);
+
       const data = await getSuggestions();
-      setMatches(data);
+
+      console.log("SUGGESTIONS =", data);
+
+      setMatches(data || []);
     } catch (error) {
-      console.log(error);
+      console.log("ERROR =", error);
+      setMatches([]);
     } finally {
       setLoading(false);
     }
@@ -32,24 +42,29 @@ export default function SuggestionsScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </TouchableOpacity>
-        <Text style={styles.title}>Suggestions</Text>
-      </View>
+      <ScreenHeader
+        title="Suggestions"
+        subtitle="Profils compatibles pour vous"
+        onBack={() => navigation.goBack()}
+      />
 
       {loading ? (
-        <ActivityIndicator size="large" color="#0D47A1" />
+        <View style={styles.center}>
+          <ActivityIndicator size="large" color={colors.brandBlue} />
+        </View>
       ) : (
         <FlatList
           contentContainerStyle={styles.list}
           data={matches}
-          keyExtractor={(item) => item.userId}
+          keyExtractor={(item, index) =>
+            item.userId || item.id || String(index)
+          }
           renderItem={({ item }) => (
             <MatchCard
               match={item}
-              onPress={(user) => navigation.navigate("Profil", { user })}
+              onPress={(user) =>
+                navigation.navigate("Profil", { user })
+              }
             />
           )}
         />
@@ -59,17 +74,14 @@ export default function SuggestionsScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 20,
-    backgroundColor: "#0D47A1",
-    flexDirection: "row",
+  container: layout.screen,
+  center: {
+    flex: 1,
+    justifyContent: "center",
     alignItems: "center",
-    gap: 12,
   },
-  back: { color: "#fff", fontSize: 34 },
-  title: { color: "#fff", fontSize: 22, fontWeight: "bold" },
-  list: { padding: 18 },
+  list: {
+    padding: spacing.xl - 2,
+    paddingTop: spacing.md,
+  },
 });

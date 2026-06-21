@@ -8,8 +8,10 @@ import {
   View,
 } from "react-native";
 
+import ScreenHeader from "../components/ScreenHeader";
 import UserCard from "../components/UserCard";
 import { searchUsers } from "../services/apiService";
+import { colors, layout, radius, shadows, spacing, typography } from "../theme";
 
 export default function SearchScreen({ navigation }) {
   const [skill, setSkill] = useState("");
@@ -22,20 +24,23 @@ export default function SearchScreen({ navigation }) {
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>Search Users</Text>
-      </View>
+      <ScreenHeader
+        title="Search Users"
+        subtitle="Trouvez des profils par compétence ou secteur"
+      />
 
       <View style={styles.searchBox}>
         <TextInput
           placeholder="Search by skill, need or sector..."
+          placeholderTextColor={colors.textMuted}
           value={skill}
           onChangeText={setSkill}
           style={styles.input}
+          onSubmitEditing={handleSearch}
+          returnKeyType="search"
         />
-
-        <TouchableOpacity onPress={handleSearch} style={styles.filterButton}>
-          <Text style={styles.filterText}>🔍</Text>
+        <TouchableOpacity onPress={handleSearch} style={styles.searchButton}>
+          <Text style={styles.searchButtonText}>🔍</Text>
         </TouchableOpacity>
       </View>
 
@@ -51,60 +56,48 @@ export default function SearchScreen({ navigation }) {
             onPress={(user) => navigation.navigate("Profil", { user })}
           />
         )}
+        ListEmptyComponent={
+          results.length === 0 && skill.length > 0 ? (
+            <Text style={styles.empty}>Aucun résultat trouvé.</Text>
+          ) : null
+        }
       />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    backgroundColor: "#0D47A1",
-  },
-
-  title: { color: "#fff", fontSize: 22, fontWeight: "bold" },
-
+  container: layout.screen,
   searchBox: {
     flexDirection: "row",
-    margin: 18,
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    paddingHorizontal: 12,
+    margin: spacing.xl - 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg + 2,
+    paddingHorizontal: spacing.md,
     alignItems: "center",
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    ...shadows.card,
   },
-
   input: {
     flex: 1,
     height: 48,
-    fontSize: 14,
+    fontSize: typography.sizes.sm,
+    color: colors.textPrimary,
   },
-
-  filterButton: {
+  searchButton: {
     width: 40,
     height: 40,
     borderRadius: 20,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     alignItems: "center",
     justifyContent: "center",
   },
-
-  filterText: { fontSize: 20 },
-
-  sectionTitle: {
-    marginHorizontal: 18,
-    marginBottom: 10,
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#0D47A1",
+  searchButtonText: { fontSize: typography.sizes.xl },
+  sectionTitle: layout.sectionTitle,
+  list: layout.listContent,
+  empty: {
+    textAlign: "center",
+    marginTop: 30,
+    color: colors.textSubtle,
+    fontSize: typography.sizes.md,
   },
-
-  list: { paddingHorizontal: 18, paddingBottom: 20 },
 });

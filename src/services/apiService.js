@@ -1,22 +1,50 @@
 import axios from "axios";
 import { auth } from "./authService";
 
-const API_URL = "http://192.168.0.105:8083";
+const API_URL = "http://10.130.182.153:8080";
 
-export async function getSuggestions() {
-  const uid = auth.currentUser?.uid;
-
-  const response = await fetch(`${API_URL}/api/matching/suggestions`, {
-    headers: {
-      "X-User-Id": uid,
-    },
-  });
-
-  return response.json();
+// =====================
+// SAFE UID HELPER
+// =====================
+function getUid() {
+  return auth.currentUser?.uid || null;
 }
 
+// =====================
+// MATCHING / SUGGESTIONS
+// =====================
+export async function getSuggestions() {
+  const uid = getUid();
+
+  console.log("AUTH UID =", uid);
+
+  if (!uid) return [];
+
+  try {
+    const response = await fetch(
+      `${API_URL}/api/matching/suggestions`,
+      {
+        headers: {
+          "X-User-Id": uid,
+        },
+      }
+    );
+
+    const data = await response.json().catch(() => []);
+
+    console.log("SUGGESTIONS RAW =", data);
+
+    return Array.isArray(data) ? data : [];
+  } catch (e) {
+    console.log("SUGGESTIONS ERROR =", e);
+    return [];
+  }
+}
+
+// =====================
 export async function getMatches() {
-  const uid = auth.currentUser?.uid;
+  const uid = getUid();
+  if (!uid) return [];
 
   const response = await fetch(`${API_URL}/api/matching`, {
     headers: {
@@ -24,87 +52,23 @@ export async function getMatches() {
     },
   });
 
-  return response.json();
+  const data = await response.json().catch(() => []);
+  return Array.isArray(data) ? data : [];
 }
 
-export async function searchUsers(filters) {
-  const params = new URLSearchParams();
-
-  if (filters.skill) params.append("skill", filters.skill);
-
-  if (filters.sector) params.append("sector", filters.sector);
-
-  if (filters.location) params.append("location", filters.location);
-
-  if (filters.need) params.append("need", filters.need);
-
-  const response = await fetch(`${API_URL}/api/search?${params}`);
-
-  return response.json();
-}
-
-export async function searchProjects(filters) {
-  const params = new URLSearchParams();
-
-  if (filters.secteur) params.append("secteur", filters.secteur);
-
-  if (filters.besoin) params.append("besoin", filters.besoin);
-
-  const response = await fetch(`${API_URL}/api/search/projects?${params}`);
-
-  return response.json();
-}
-
-export async function getProjectMatches() {
-  const uid = auth.currentUser?.uid;
-
-  const response = await fetch(`${API_URL}/api/matching/projects`, {
-    headers: {
-      "X-User-Id": uid,
-    },
-  });
-
-  return response.json();
-}
+// =====================
+// USERS
+// =====================
 export async function getUser(id) {
+  if (!id) return null;
+
   const response = await fetch(`${API_URL}/api/users/${id}`);
-
-  return response.json();
-}
-
-export async function getProfileCompletion() {
-  const uid = auth.currentUser?.uid;
-
-  const response = await fetch(`${API_URL}/api/users/me/completion`, {
-    headers: {
-      "X-User-Id": uid,
-    },
-  });
-
-  return response.json();
-}
-
-export async function updateMyProfile(profile) {
-  const uid = auth.currentUser?.uid;
-
-  console.log("UID:", uid);
-  console.log("URL UPDATE:", `${API_URL}/api/users/me`);
-  console.log("PROFILE:", profile);
-
-  const response = await axios.put(`${API_URL}/api/users/me`, profile, {
-    headers: {
-      "Content-Type": "application/json",
-      "X-User-Id": uid,
-    },
-  });
-
-  console.log("UPDATE RESPONSE:", response.data);
-
-  return response.data;
+  return response.ok ? response.json() : null;
 }
 
 export async function getMyProfile() {
-  const uid = auth.currentUser?.uid;
+  const uid = getUid();
+  if (!uid) return null;
 
   const response = await fetch(`${API_URL}/api/users/me`, {
     headers: {
@@ -112,41 +76,100 @@ export async function getMyProfile() {
     },
   });
 
-  return response.json();
+  return response.ok ? response.json() : null;
 }
 
+export async function getNotifications(userId) {
+  const response = await fetch(
+    `${API_URL}/api/notifications/${userId}`
+  );
+
+  if (!response.ok) {
+    return [];
+  }
+
+  const data = await response.json();
+
+  return Array.isArray(data) ? data : [];
+}
+
+export async function markNotificationAsRead(notificationId) {
+  const response = await fetch(
+    `${API_URL}/api/notifications/read/${notificationId}`,
+    {
+      method: "PUT",
+    }
+  );
+
+  return response.ok;
+}
+// PROJECTS
+export async function getProjectsByUser(userId) {
+  try {
+    const res = await fetch(`${API_URL}/api/projects/user/${userId}`);
+
+    if (!res.ok) {
+      console.log("PROJECTS ERROR STATUS =", res.status);
+      return [];
+    }
+
+    return await res.json();
+  } catch (e) {
+    console.log("PROJECTS ERROR =", e);
+    return [];
+  }
+}
+
+// CONVERSATIONS
+
+
 export async function getUserConversations(userId) {
-  const response = await fetch(`${API_URL}/api/conversations/user/${userId}`);
-  return response.json();
+  try {
+    const res = await fetch(`${API_URL}/api/conversations/user/${userId}`); // ← ajoute /user/
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    return [];
+  }
+}
+export async function getOrCreateConversation(user1, user2) {
+  const res = await fetch(`${API_URL}/api/conversations/create`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ user1, user2 }),
+  });
+  return res.ok ? res.json() : null;
 }
 
 export async function getMessages(conversationId) {
-  const response = await fetch(
-    `${API_URL}/api/conversations/${conversationId}/messages`,
-  );
-  return response.json();
+  const res = await fetch(`${API_URL}/api/conversations/${conversationId}/messages`);
+  return res.ok ? res.json() : [];
 }
 
-export async function sendMessage(
-  conversationId,
-  senderId,
-  receiverId,
-  content,
-) {
-  const response = await fetch(
-    `${API_URL}/api/conversations/${conversationId}/messages`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ senderId, receiverId, content }),
-    },
-  );
-
-  return response.json();
+export async function sendMessage(conversationId, senderId, receiverId, content) {
+  const res = await fetch(`${API_URL}/api/conversations/${conversationId}/messages`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ senderId, receiverId, content }),
+  });
+  return res.ok ? res.json() : null;
 }
 
 export async function markAsRead(conversationId, userId) {
   await fetch(`${API_URL}/api/conversations/${conversationId}/read/${userId}`, {
     method: "PUT",
   });
+}
+export async function searchUsers({ skill }) {
+  try {
+    const params = new URLSearchParams();
+    if (skill) params.append("skill", skill);
+
+    const res = await fetch(`${API_URL}/api/search?${params.toString()}`);
+    if (!res.ok) return [];
+    return await res.json();
+  } catch (e) {
+    console.log("SEARCH ERROR =", e);
+    return [];
+  }
 }

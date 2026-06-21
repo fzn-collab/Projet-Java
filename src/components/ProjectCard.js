@@ -1,5 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { colors, components, radius, spacing, typography } from "../theme";
+
 export default function ProjectCard({ project, onPress }) {
   return (
     <TouchableOpacity onPress={() => onPress(project)} style={styles.card}>
@@ -26,36 +28,47 @@ export default function ProjectCard({ project, onPress }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 12,
-    marginBottom: 14,
+    ...components.card,
+    marginBottom: spacing.md + 2,
     flexDirection: "row",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: spacing.md,
+    padding: spacing.md,
   },
   imageBox: {
     width: 70,
     height: 70,
-    borderRadius: 14,
-    backgroundColor: "#E3F2FD",
+    borderRadius: radius.lg - 2,
+    backgroundColor: colors.brandBluePale,
     justifyContent: "center",
     alignItems: "center",
   },
   imageIcon: { fontSize: 30 },
-  title: { fontSize: 17, fontWeight: "bold", color: "#0D47A1" },
-  sub: { color: "#607D8B", fontSize: 12 },
-  info: { color: "#455A64", fontSize: 12, marginTop: 5 },
-  badges: { flexDirection: "row", gap: 6, marginTop: 7 },
+  title: {
+    fontSize: typography.sizes.lg - 1,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  sub: {
+    color: colors.textSubtle,
+    fontSize: typography.sizes.xs,
+  },
+  info: {
+    color: colors.textBody,
+    fontSize: typography.sizes.xs,
+    marginTop: 5,
+  },
+  badges: {
+    flexDirection: "row",
+    gap: 6,
+    marginTop: 7,
+  },
   badge: {
-    backgroundColor: "#E3F2FD",
-    color: "#0D47A1",
-    paddingHorizontal: 8,
+    backgroundColor: colors.brandBluePale,
+    color: colors.brandBlue,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 3,
-    borderRadius: 10,
-    fontSize: 11,
+    borderRadius: radius.sm + 2,
+    fontSize: typography.sizes.xs - 1,
+    overflow: "hidden",
   },
 });

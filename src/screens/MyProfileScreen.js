@@ -1,15 +1,25 @@
 import { useEffect, useState } from "react";
 import {
-    ActivityIndicator,
-    Alert,
-    ScrollView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Alert,
+  ScrollView,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
+
+import ScreenHeader from "../components/ScreenHeader";
 import { getMyProfile } from "../services/apiService";
 import { auth } from "../services/authService";
+import {
+  colors,
+  components,
+  layout,
+  radius,
+  spacing,
+  typography,
+} from "../theme";
 
 export default function MyProfileScreen({ navigation }) {
   const [user, setUser] = useState(null);
@@ -24,7 +34,6 @@ export default function MyProfileScreen({ navigation }) {
     try {
       setLoading(true);
       const data = await getMyProfile();
-      console.log("MY PROFILE:", data);
       setUser(data);
     } catch (error) {
       console.log("MY PROFILE ERROR:", error);
@@ -45,7 +54,7 @@ export default function MyProfileScreen({ navigation }) {
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0D47A1" />
+        <ActivityIndicator size="large" color={colors.brandBlue} />
       </View>
     );
   }
@@ -53,16 +62,17 @@ export default function MyProfileScreen({ navigation }) {
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Aucun profil trouvé</Text>
+        <Text style={styles.emptyText}>Aucun profil trouvé</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Profile</Text>
-      </View>
+      <ScreenHeader
+        title="My Profile"
+        subtitle={user.nom || ""}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.avatar}>
@@ -108,71 +118,83 @@ export default function MyProfileScreen({ navigation }) {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 22,
-    backgroundColor: "#0D47A1",
+  container: layout.screen,
+  center: layout.center,
+  emptyText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.md,
   },
-  headerTitle: { color: "#fff", fontSize: 24, fontWeight: "bold" },
-  content: { padding: 20, alignItems: "center" },
+  content: {
+    ...layout.scrollContent,
+    paddingTop: spacing.xl,
+  },
   avatar: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-  avatarText: { fontSize: 36, fontWeight: "bold", color: "#0D47A1" },
-  name: { fontSize: 24, fontWeight: "bold", color: "#0D47A1" },
-  sub: { color: "#607D8B", marginTop: 4, marginBottom: 20 },
+  avatarText: {
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  name: {
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  sub: {
+    color: colors.textSubtle,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xl,
+  },
   card: {
+    ...components.card,
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: spacing.md + 2,
   },
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#0D47A1",
-    marginBottom: 10,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+    marginBottom: spacing.sm + 2,
   },
-  info: { color: "#455A64", marginBottom: 7 },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: 8 },
+  info: {
+    color: colors.textBody,
+    marginBottom: 7,
+  },
+  badges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: spacing.sm,
+  },
   badge: {
-    backgroundColor: "#E3F2FD",
-    color: "#0D47A1",
-    paddingHorizontal: 10,
+    backgroundColor: colors.brandBluePale,
+    color: colors.brandBlue,
+    paddingHorizontal: spacing.sm + 2,
     paddingVertical: 5,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "600",
+    borderRadius: radius.md,
+    fontSize: typography.sizes.xs,
+    fontWeight: typography.weights.semibold,
+    overflow: "hidden",
   },
   editButton: {
+    ...components.buttonPrimary,
     width: "100%",
-    backgroundColor: "#0D47A1",
-    padding: 15,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 10,
+    borderRadius: radius.lg - 2,
+    marginTop: spacing.sm + 2,
   },
   logoutButton: {
     width: "100%",
-    backgroundColor: "#EF5350",
-    padding: 15,
-    borderRadius: 14,
+    backgroundColor: colors.error,
+    padding: spacing.lg - 1,
+    borderRadius: radius.lg - 2,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: spacing.sm + 2,
   },
-  buttonText: { color: "#fff", fontWeight: "bold" },
+  buttonText: components.buttonPrimaryText,
 });

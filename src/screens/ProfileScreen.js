@@ -1,32 +1,66 @@
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
+  Alert,
   ScrollView,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
-import { getUser } from "../services/apiService";
+
+import ScreenHeader from "../components/ScreenHeader";
+import {
+  getOrCreateConversation,
+  getUser,
+  getMyProfile,
+} from "../services/apiService";
+
+import {
+  colors,
+  components,
+  layout,
+  radius,
+  spacing,
+  typography,
+} from "../theme";
 
 export default function ProfileScreen({ route, navigation }) {
   const receivedUser = route.params?.user;
-  const userId = receivedUser?.userId || receivedUser?.id;
+  const profileUserId = receivedUser?.id || receivedUser?.userId;
 
   const [user, setUser] = useState(receivedUser || null);
   const [loading, setLoading] = useState(false);
+  const [openingChat, setOpeningChat] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState(null);
+
+  const isOwnProfile =
+    currentUserId && profileUserId && currentUserId === profileUserId;
 
   useEffect(() => {
-    if (userId) {
+    loadCurrentUser();
+    if (profileUserId) {
       loadUser();
     }
-  }, [userId]);
+  }, [profileUserId]);
+
+  async function loadCurrentUser() {
+    try {
+      const me = await getMyProfile();
+      console.log("MY PROFILE =", me);
+      console.log("MY MONGO ID =", me?.id);
+      setCurrentUserId(me?.id);
+    } catch (error) {
+      console.log("LOAD CURRENT USER ERROR:", error);
+    }
+  }
 
   async function loadUser() {
     try {
       setLoading(true);
-      const data = await getUser(userId);
-      console.log("USER DETAILS:", data);
+      console.log("PROFILE USER ID =", profileUserId);
+      const data = await getUser(profileUserId);
+      console.log("PROFILE DATA =", data);
       setUser(data);
     } catch (error) {
       console.log("GET USER ERROR:", error);
@@ -35,10 +69,46 @@ export default function ProfileScreen({ route, navigation }) {
     }
   }
 
+  async function handleMessage() {
+    try {
+      const me = await getMyProfile();
+      const myId = me?.id;
+      const otherId = route.params?.user?.id || route.params?.user?.userId;
+
+      console.log("CURRENT USER =", myId);
+      console.log("OTHER USER =", otherId);
+
+      if (!myId || !otherId) {
+        Alert.alert("Erreur", `myId=${myId} otherId=${otherId}`);
+        return;
+      }
+
+      if (myId === otherId) return;
+
+      setOpeningChat(true);
+
+      const conversation = await getOrCreateConversation(myId, otherId);
+      console.log("CONVERSATION =", conversation);
+
+      if (!conversation?.id) throw new Error("Conversation ID missing");
+
+      navigation.navigate("Chat", {
+        conversationId: conversation.id,
+        currentUserId: myId,
+        otherUserId: otherId,
+      });
+    } catch (error) {
+      console.log("OPEN CHAT ERROR:", error);
+      Alert.alert("Erreur", "Impossible de créer la conversation");
+    } finally {
+      setOpeningChat(false);
+    }
+  }
+
   if (loading) {
     return (
       <View style={styles.center}>
-        <ActivityIndicator size="large" color="#0D47A1" />
+        <ActivityIndicator size="large" color={colors.brandBlue} />
       </View>
     );
   }
@@ -46,20 +116,18 @@ export default function ProfileScreen({ route, navigation }) {
   if (!user) {
     return (
       <View style={styles.center}>
-        <Text>Aucun utilisateur sélectionné</Text>
+        <Text style={styles.emptyText}>Aucun utilisateur sélectionné</Text>
       </View>
     );
   }
 
   return (
     <View style={styles.container}>
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
-          <Text style={styles.back}>‹</Text>
-        </TouchableOpacity>
-
-        <Text style={styles.headerTitle}>User Profile</Text>
-      </View>
+      <ScreenHeader
+        title="Profil"
+        subtitle={user.nom || user.name}
+        onBack={() => navigation.goBack()}
+      />
 
       <ScrollView contentContainerStyle={styles.content}>
         <View style={styles.avatar}>
@@ -69,7 +137,7 @@ export default function ProfileScreen({ route, navigation }) {
         </View>
 
         <Text style={styles.name}>{user.nom || user.name}</Text>
-        <Text style={styles.sub}>{user.typeProfil || "Entrepreneur"}</Text>
+        <Text style={styles.sub}>{user.typeProfil}</Text>
 
         <View style={styles.card}>
           <Text style={styles.sectionTitle}>Information</Text>
@@ -90,115 +158,98 @@ export default function ProfileScreen({ route, navigation }) {
           </View>
         </View>
 
-        <TouchableOpacity style={styles.primaryButton}>
-          <Text style={styles.primaryText}>Connect</Text>
-        </TouchableOpacity>
+        {!isOwnProfile && (
+          <TouchableOpacity
+            style={[
+              styles.primaryButton,
+              openingChat && styles.primaryButtonDisabled,
+            ]}
+            onPress={handleMessage}
+            disabled={openingChat}
+          >
+            {openingChat ? (
+              <ActivityIndicator color="white" />
+            ) : (
+              <Text style={styles.primaryText}>✉️ Envoyer un message</Text>
+            )}
+          </TouchableOpacity>
+        )}
       </ScrollView>
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F8FAFC" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-
-  header: {
-    paddingTop: 60,
-    paddingHorizontal: 20,
-    paddingBottom: 18,
-    backgroundColor: "#0D47A1",
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
+  container: layout.screen,
+  center: layout.center,
+  emptyText: {
+    color: colors.textSecondary,
+    fontSize: typography.sizes.md,
   },
-
-  back: { color: "#fff", fontSize: 34 },
-  headerTitle: { color: "#fff", fontSize: 22, fontWeight: "bold" },
-
   content: {
-    padding: 20,
-    alignItems: "center",
+    ...layout.scrollContent,
+    paddingTop: spacing.md,
   },
-
   avatar: {
     width: 90,
     height: 90,
     borderRadius: 45,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     justifyContent: "center",
     alignItems: "center",
-    marginBottom: 12,
+    marginBottom: spacing.md,
   },
-
   avatarText: {
-    fontSize: 36,
-    fontWeight: "bold",
-    color: "#0D47A1",
+    fontSize: typography.sizes.display,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
   },
-
   name: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#0D47A1",
+    fontSize: typography.sizes.xxl,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
   },
-
   sub: {
-    color: "#607D8B",
-    marginTop: 4,
-    marginBottom: 20,
+    color: colors.textSubtle,
+    marginTop: spacing.xs,
+    marginBottom: spacing.xl,
   },
-
   card: {
+    ...components.card,
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 18,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    marginBottom: spacing.md,
   },
-
   sectionTitle: {
-    fontSize: 16,
-    fontWeight: "bold",
-    color: "#0D47A1",
-    marginBottom: 10,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+    marginBottom: spacing.sm,
   },
-
   info: {
-    color: "#455A64",
+    color: colors.textBody,
     marginBottom: 7,
   },
-
   badges: {
     flexDirection: "row",
     flexWrap: "wrap",
-    gap: 8,
+    gap: spacing.sm,
   },
-
   badge: {
-    backgroundColor: "#E3F2FD",
-    color: "#0D47A1",
-    paddingHorizontal: 10,
+    backgroundColor: colors.brandBluePale,
+    color: colors.brandBlue,
+    paddingHorizontal: spacing.sm,
     paddingVertical: 5,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "600",
+    borderRadius: radius.md,
+    fontSize: typography.sizes.xs,
   },
-
   primaryButton: {
+    ...components.buttonPrimary,
     width: "100%",
-    backgroundColor: "#0D47A1",
-    padding: 15,
-    borderRadius: 14,
-    alignItems: "center",
-    marginTop: 8,
+    borderRadius: radius.lg - 2,
+    marginTop: spacing.sm,
   },
-
-  primaryText: {
-    color: "#fff",
-    fontWeight: "bold",
+  primaryButtonDisabled: {
+    opacity: 0.7,
   },
+  primaryText: components.buttonPrimaryText,
 });

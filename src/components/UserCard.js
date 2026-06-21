@@ -1,5 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { colors, components, radius, spacing, typography } from "../theme";
+
 export default function UserCard({ user, onPress }) {
   return (
     <TouchableOpacity onPress={() => onPress(user)} style={styles.card}>
@@ -27,36 +29,52 @@ export default function UserCard({ user, onPress }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 14,
+    ...components.card,
+    marginBottom: spacing.md + 2,
     flexDirection: "row",
-    gap: 12,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    gap: spacing.md,
+    padding: spacing.md + 2,
   },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { color: "#0D47A1", fontWeight: "bold", fontSize: 20 },
-  name: { fontSize: 17, fontWeight: "bold", color: "#0D47A1" },
-  sub: { color: "#607D8B", fontSize: 12 },
-  badges: { flexDirection: "row", flexWrap: "wrap", gap: 6, marginTop: 7 },
-  badge: {
-    backgroundColor: "#E3F2FD",
-    color: "#0D47A1",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 10,
-    fontSize: 11,
+  avatarText: {
+    color: colors.brandBlue,
+    fontWeight: typography.weights.bold,
+    fontSize: typography.sizes.xl,
   },
-  info: { marginTop: 7, color: "#455A64", fontSize: 12 },
+  name: {
+    fontSize: typography.sizes.lg - 1,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  sub: {
+    color: colors.textSubtle,
+    fontSize: typography.sizes.xs,
+  },
+  badges: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 6,
+    marginTop: 7,
+  },
+  badge: {
+    backgroundColor: colors.brandBluePale,
+    color: colors.brandBlue,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: radius.sm + 2,
+    fontSize: typography.sizes.xs - 1,
+    overflow: "hidden",
+  },
+  info: {
+    marginTop: 7,
+    color: colors.textBody,
+    fontSize: typography.sizes.xs,
+  },
 });

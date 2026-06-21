@@ -16,6 +16,8 @@ import ProjectFormScreen from "../screens/ProjectFormScreen";
 import ProjectScreen from "../screens/ProjectScreen";
 import SearchScreen from "../screens/SearchScreen";
 import SuggestionsScreen from "../screens/SuggestionsScreen";
+import { colors } from "../theme";
+
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
 
@@ -24,8 +26,12 @@ function BottomTabs() {
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
-        tabBarActiveTintColor: "#0D47A1",
-        tabBarInactiveTintColor: "#9E9E9E",
+        tabBarActiveTintColor: colors.brandBlue,
+        tabBarInactiveTintColor: colors.textMuted,
+        tabBarStyle: {
+          backgroundColor: colors.surface,
+          borderTopColor: colors.border,
+        },
         tabBarIcon: ({ color, size }) => {
           let icon = "home-outline";
 

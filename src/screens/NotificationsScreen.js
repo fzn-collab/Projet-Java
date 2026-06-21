@@ -1,204 +1,257 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
-    FlatList,
-    SafeAreaView,
-    StyleSheet,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  FlatList,
+  StyleSheet,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 
-export default function NotificationsScreen() {
-  const [notifications, setNotifications] = useState([
-    {
-      id: "1",
-      type: "message",
-      read: false,
-      title: "Nouveau message",
-      text: "entrepreneur2 vous a envoyé un message",
-      time: "Il y a 5 min",
-    },
-    {
-      id: "2",
-      type: "match",
-      read: false,
-      title: "Nouveau match !",
-      text: "Vous avez matché avec un entrepreneur FinTech",
-      time: "Il y a 1h",
-    },
-    {
-      id: "3",
-      type: "project",
-      read: true,
-      title: "Invitation projet",
-      text: "Vous êtes invité à rejoindre un projet SaaS RH",
-      time: "Il y a 2h",
-    },
-    {
-      id: "4",
-      type: "match",
-      read: true,
-      title: "Nouveau match !",
-      text: "Profil compatible dans le secteur E-Commerce",
-      time: "Hier",
-    },
-  ]);
+import ScreenHeader from "../components/ScreenHeader";
+import {
+  getMyProfile,
+  getNotifications,
+  markNotificationAsRead,
+} from "../services/apiService";
 
-  const getIcon = (type) => {
-    if (type === "message") return "💬";
-    if (type === "match") return "🤝";
-    if (type === "project") return "📋";
-    return "🔔";
-  };
+import { colors, spacing, radius, typography, layout } from "../theme";
 
-  const getColor = (type) => {
-    if (type === "message") return "#1A73E8";
-    if (type === "match") return "#4CAF50";
-    if (type === "project") return "#FF9800";
-    return "#9C27B0";
-  };
+export default function NotificationsScreen({ navigation }) {
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const markAllRead = () => {
-    setNotifications((prev) => prev.map((n) => ({ ...n, read: true })));
-  };
+  useEffect(() => {
+    loadNotifications();
+  }, []);
+
+  async function loadNotifications() {
+    try {
+      const profile = await getMyProfile();
+
+      if (!profile) {
+        setLoading(false);
+        return;
+      }
+
+      const data = await getNotifications(profile.id);
+
+      setNotifications(Array.isArray(data) ? data : []);
+    } catch (e) {
+      console.log("NOTIFICATIONS ERROR =", e);
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  function getIcon(type) {
+    switch (type) {
+      case "message":
+        return "💬";
+      case "match":
+        return "🤝";
+      case "project":
+        return "📋";
+      default:
+        return "🔔";
+    }
+  }
+
+  function getColor(type) {
+    switch (type) {
+      case "message":
+        return colors.brandBlue;
+      case "match":
+        return colors.success;
+      case "project":
+        return colors.warning;
+      default:
+        return colors.accentBlue;
+    }
+  }
+
+  async function handlePress(item) {
+    try {
+      await markNotificationAsRead(item.id);
+
+      setNotifications((prev) =>
+        prev.map((n) =>
+          n.id === item.id ? { ...n, read: true } : n
+        )
+      );
+
+      if (item.type === "message") {
+        navigation.navigate("Messages");
+      }
+    } catch (e) {
+      console.log(e);
+    }
+  }
+
+  async function markAllRead() {
+    try {
+      await Promise.all(
+        notifications
+          .filter((n) => !n.read)
+          .map((n) => markNotificationAsRead(n.id))
+      );
+
+      setNotifications((prev) =>
+        prev.map((n) => ({ ...n, read: true }))
+      );
+    } catch (e) {
+      console.log(e);
+    }
+  }
 
   const unreadCount = notifications.filter((n) => !n.read).length;
 
-  return (
-    <SafeAreaView style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
-        <View>
-          <Text style={styles.headerTitle}>Notifications</Text>
-          {unreadCount > 0 && (
-            <Text style={styles.headerSubtitle}>
-              {unreadCount} non lue{unreadCount > 1 ? "s" : ""}
-            </Text>
-          )}
-        </View>
-        {unreadCount > 0 && (
-          <TouchableOpacity style={styles.markAllButton} onPress={markAllRead}>
-            <Text style={styles.markAllText}>Tout lire</Text>
-          </TouchableOpacity>
-        )}
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator size="large" color={colors.brandBlue} />
       </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <ScreenHeader
+        title="Notifications"
+        subtitle={
+          unreadCount > 0
+            ? `${unreadCount} non lue${unreadCount > 1 ? "s" : ""}`
+            : "Tout est à jour"
+        }
+        onBack={() => navigation.goBack()}
+        rightAction={
+          unreadCount > 0 ? (
+            <TouchableOpacity onPress={markAllRead}>
+              <Text style={styles.markAllText}>Tout lire</Text>
+            </TouchableOpacity>
+          ) : null
+        }
+      />
 
       <FlatList
         data={notifications}
-        keyExtractor={(item) => item.id}
+        keyExtractor={(item) => item.id?.toString()}
         contentContainerStyle={styles.list}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🔔</Text>
-            <Text style={styles.emptyTitle}>Aucune notification</Text>
+            <Text style={styles.emptyTitle}>
+              Aucune notification
+            </Text>
           </View>
         }
         renderItem={({ item }) => (
           <TouchableOpacity
-            style={[styles.notifItem, !item.read && styles.unreadItem]}
-            onPress={() =>
-              setNotifications((prev) =>
-                prev.map((n) => (n.id === item.id ? { ...n, read: true } : n)),
-              )
-            }
-            activeOpacity={0.7}
+            style={[
+              styles.notifItem,
+              !item.read && styles.unreadItem,
+            ]}
+            onPress={() => handlePress(item)}
           >
             <View
               style={[
-                styles.iconContainer,
+                styles.icon,
                 { backgroundColor: getColor(item.type) + "20" },
               ]}
             >
-              <Text style={styles.icon}>{getIcon(item.type)}</Text>
+              <Text>{getIcon(item.type)}</Text>
             </View>
-            <View style={styles.notifContent}>
-              <View style={styles.notifHeader}>
-                <Text style={styles.notifTitle}>{item.title}</Text>
-                <Text style={styles.notifTime}>{item.time}</Text>
-              </View>
-              <Text style={styles.notifText}>{item.text}</Text>
+
+            <View style={styles.content}>
+              <Text style={styles.title}>{item.title}</Text>
+              <Text style={styles.text}>{item.content}</Text>
             </View>
+
             {!item.read && (
               <View
                 style={[
-                  styles.unreadDot,
+                  styles.dot,
                   { backgroundColor: getColor(item.type) },
                 ]}
               />
             )}
           </TouchableOpacity>
         )}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#F0F2F5" },
-
-  // Header
-  header: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#1A73E8",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-    elevation: 4,
+  container: {
+    ...layout.screen,
   },
-  headerTitle: { color: "white", fontSize: 22, fontWeight: "700" },
-  headerSubtitle: {
-    color: "rgba(255,255,255,0.8)",
-    fontSize: 13,
-    marginTop: 2,
-  },
-  markAllButton: {
-    backgroundColor: "rgba(255,255,255,0.2)",
-    paddingHorizontal: 14,
-    paddingVertical: 7,
-    borderRadius: 20,
-  },
-  markAllText: { color: "white", fontSize: 13, fontWeight: "600" },
 
-  list: { paddingVertical: 8 },
-
-  // Empty
-  emptyContainer: {
-    justifyContent: "center",
-    alignItems: "center",
-    paddingTop: 100,
+  loading: {
+    ...layout.center,
   },
-  emptyIcon: { fontSize: 60, marginBottom: 20 },
-  emptyTitle: { fontSize: 18, color: "#888" },
 
-  // Notification item
+  list: {
+    paddingBottom: spacing.xl,
+  },
+
   notifItem: {
     flexDirection: "row",
     alignItems: "center",
-    backgroundColor: "white",
-    paddingHorizontal: 16,
-    paddingVertical: 14,
+    padding: spacing.md,
+    gap: spacing.md,
   },
-  unreadItem: { backgroundColor: "#F0F7FF" },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    justifyContent: "center",
+
+  unreadItem: {
+    backgroundColor: colors.brandBluePale,
+  },
+
+  icon: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
     alignItems: "center",
-    marginRight: 14,
+    justifyContent: "center",
   },
-  icon: { fontSize: 22 },
-  notifContent: { flex: 1 },
-  notifHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginBottom: 4,
+
+  content: {
+    flex: 1,
   },
-  notifTitle: { fontSize: 15, fontWeight: "700", color: "#1A1A1A" },
-  notifTime: { fontSize: 12, color: "#999" },
-  notifText: { fontSize: 14, color: "#555", lineHeight: 20 },
-  unreadDot: { width: 10, height: 10, borderRadius: 5, marginLeft: 10 },
-  separator: { height: 1, backgroundColor: "#F0F0F0" },
+
+  title: {
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.bold,
+    color: colors.textPrimary,
+  },
+
+  text: {
+    fontSize: typography.sizes.sm,
+    color: colors.textSecondary,
+  },
+
+  dot: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+  },
+
+  emptyContainer: {
+    ...layout.center,
+    marginTop: 80,
+  },
+
+  emptyIcon: {
+    fontSize: 40,
+  },
+
+  emptyTitle: {
+    marginTop: spacing.sm,
+    fontSize: typography.sizes.md,
+    fontWeight: typography.weights.semibold,
+  },
+
+  markAllText: {
+    color: colors.accentBlue,
+    fontWeight: "600",
+  },
 });

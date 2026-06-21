@@ -1,5 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 
+import { colors, components, radius, spacing, typography } from "../theme";
+
 export default function MatchCard({ match, onPress }) {
   return (
     <TouchableOpacity onPress={() => onPress(match)} style={styles.card}>
@@ -31,36 +33,46 @@ export default function MatchCard({ match, onPress }) {
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: "#fff",
-    borderRadius: 18,
-    padding: 14,
-    marginBottom: 14,
-    shadowColor: "#000",
-    shadowOpacity: 0.08,
-    shadowRadius: 8,
-    elevation: 4,
+    ...components.card,
+    marginBottom: spacing.md + 2,
   },
-  row: { flexDirection: "row", gap: 12 },
+  row: { flexDirection: "row", gap: spacing.md },
   avatar: {
     width: 48,
     height: 48,
     borderRadius: 24,
-    backgroundColor: "#E3F2FD",
+    backgroundColor: colors.brandBluePale,
     justifyContent: "center",
     alignItems: "center",
   },
-  avatarText: { color: "#0D47A1", fontSize: 22, fontWeight: "bold" },
-  name: { fontSize: 17, fontWeight: "bold", color: "#0D47A1" },
-  sub: { color: "#607D8B", fontSize: 12, marginTop: 2 },
+  avatarText: {
+    color: colors.brandBlue,
+    fontSize: typography.sizes.xl,
+    fontWeight: typography.weights.bold,
+  },
+  name: {
+    fontSize: typography.sizes.lg - 1,
+    fontWeight: typography.weights.bold,
+    color: colors.brandBlue,
+  },
+  sub: {
+    color: colors.textSubtle,
+    fontSize: typography.sizes.xs,
+    marginTop: 2,
+  },
   badgeRow: { flexDirection: "row", marginTop: 6 },
   badge: {
-    backgroundColor: "#E3F2FD",
-    color: "#0D47A1",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 12,
-    fontSize: 12,
-    fontWeight: "600",
+    ...components.badgeMatchText,
+    backgroundColor: colors.successBg,
+    color: colors.success,
+    paddingHorizontal: spacing.sm + 2,
+    paddingVertical: spacing.xs,
+    borderRadius: radius.md,
+    overflow: "hidden",
   },
-  reason: { marginTop: 5, fontSize: 12, color: "#455A64" },
+  reason: {
+    marginTop: 5,
+    fontSize: typography.sizes.xs,
+    color: colors.textBody,
+  },
 });
