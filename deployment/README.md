@@ -1,7 +1,6 @@
 # Déploiement Docker — ConnectEntrepreneurs
 
-Personne 5 — DevOps
-
+Mardey Zineb
 ## Structure du projet (cible finale)
 
 ```

@@ -1,0 +1,4 @@
+com\connectentrepreneurs\auth\controller\AuthController.class
+com\connectentrepreneurs\auth\service\AuthService.class
+com\connectentrepreneurs\auth\model\AuthResponse.class
+com\connectentrepreneurs\auth\model\AuthRequest.class

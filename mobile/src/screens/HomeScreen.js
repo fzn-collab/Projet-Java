@@ -15,7 +15,7 @@ export default function HomeScreen({ navigation }) {
       <View style={styles.header}>
         <View>
           <Text style={styles.logo}>Connecto</Text>
-          <Text style={styles.hello}>Hey, Aya 👋</Text>
+          <Text style={styles.hello}>Hello</Text>
           <Text style={styles.subtitle}>
             We are here to help you connect, collaborate and grow your ideas.
           </Text>

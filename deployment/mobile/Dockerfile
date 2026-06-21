@@ -1,7 +1,7 @@
-# Expo Development Server - ConnectEntrepreneurs Mobile
-# Ce conteneur sert l'app Expo pour le développement
+# Expo Web Build - ConnectEntrepreneurs Mobile
+# Ce conteneur génère et sert les fichiers statiques web
 
-FROM node:20-alpine
+FROM node:20-alpine AS builder
 
 WORKDIR /app
 
@@ -14,13 +14,26 @@ RUN npm ci
 # Copier le code source
 COPY mobile/ .
 
-# Exposer les ports Expo
-EXPOSE 19000 19001 19002
-
-# Variables d'environnement
-ENV EXPO_DEVTOOLS_LISTEN_ADDRESS=0.0.0.0
-ENV REACT_NATIVE_PACKAGER_HOSTNAME=0.0.0.0
+# Configurer l'API URL pour le web
 ENV API_URL=http://backend:8080/api
 
-# Démarrer Expo
-CMD ["npx", "expo", "start", "--web", "--host", "0.0.0.0"]
+# Générer les fichiers statiques web
+RUN npx expo export
+
+# Copier le cadre mobile
+COPY deployment/mobile/mobile-frame.html /app/dist/mobile-frame.html
+
+# Étape 2: Servir les fichiers statiques avec nginx
+FROM nginx:alpine
+
+# Copier les fichiers générés depuis le builder
+COPY --from=builder /app/dist /usr/share/nginx/html
+
+# Copier la configuration nginx
+COPY deployment/mobile/nginx.conf /etc/nginx/conf.d/default.conf
+
+# Exposer le port 80
+EXPOSE 80
+
+# Démarrer nginx
+CMD ["nginx", "-g", "daemon off;"]
